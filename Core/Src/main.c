@@ -35,7 +35,7 @@
 //#define EXAMPLE_2
 //#define EXAMPLE_3
 //#define SINGLE_COMET_EFFECT
-//#define MULTI_COMET_EFFECT
+#define MULTI_COMET_EFFECT
 #define MANUAL_MULTI_COMET_EFFECT
 /* USER CODE END PD */
 
@@ -216,6 +216,7 @@ int main(void)
 #endif
 #ifdef SINGLE_COMET_EFFECT
 	WS2812_CometEffect();
+	WS2812_SendAll();
 	HAL_Delay(10);
 #endif
 #ifdef MULTI_COMET_EFFECT
@@ -231,12 +232,14 @@ int main(void)
 		WS2812_AddComet(color, 2);
 	}
 	WS2812_MultiCometEffect();
+	WS2812_SendAll();
 	iterations++;
 
 //	HAL_Delay(50);
 #endif
 #ifdef MANUAL_MULTI_COMET_EFFECT
 	WS2812_MultiCometEffect();
+	WS2812_SendAll();
 #endif
     /* USER CODE END WHILE */
 

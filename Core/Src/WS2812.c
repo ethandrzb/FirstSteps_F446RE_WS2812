@@ -37,7 +37,7 @@ void WS2812_SetLED(uint8_t index, uint8_t red, uint8_t green, uint8_t blue)
 
 void WS2812_SetLEDAdditive(uint8_t index, uint8_t red, uint8_t green, uint8_t blue)
 {
-	LEDData[index][0] = (LEDData[index][0] + red) > UINT8_MAX ? 255 : (LEDData[index][0] + red);
+	LEDData[index][0] = (LEDData[index][0]  + red) > UINT8_MAX ? 255 : (LEDData[index][0] + red);
 	LEDData[index][1] = (LEDData[index][1] + green) > UINT8_MAX ? 255 : (LEDData[index][1] + green);
 	LEDData[index][2] = (LEDData[index][2] + blue) > UINT8_MAX ? 255 : (LEDData[index][2] + blue);
 }
@@ -191,8 +191,6 @@ void WS2812_MultiCometEffect()
 			}
 		}
 	}
-
-	WS2812_SendAll();
 }
 
 void WS2812_CometEffect()
@@ -219,6 +217,4 @@ void WS2812_CometEffect()
 
 	// Fade LEDs one step
 	WS2812_FadeAll(fadeAmount);
-
-	WS2812_SendAll();
 }
