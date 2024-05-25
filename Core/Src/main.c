@@ -35,7 +35,7 @@
 //#define EXAMPLE_2
 //#define EXAMPLE_3
 //#define SINGLE_COMET_EFFECT
-#define MULTI_COMET_EFFECT
+//#define MULTI_COMET_EFFECT
 #define MANUAL_MULTI_COMET_EFFECT
 /* USER CODE END PD */
 
@@ -83,24 +83,28 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			color.green = 0;
 			color.blue = 0;
 
-			WS2812_AddComet(color, 8);
+			WS2812_AddComet(color, 1);
 			break;
 		case BTN2_Pin:
-			WS2812_SetAllLEDsAdditive(64, 64, 64);
+			color.red = 0;
+			color.green = 64;
+			color.blue = 0;
+
+			WS2812_AddComet(color, 2);
 			break;
 		case BTN3_Pin:
 			color.red = 0;
 			color.green = 0;
 			color.blue = 64;
 
-			WS2812_AddComet(color, 1);
+			WS2812_AddComet(color, 4);
 			break;
 		case BTN4_Pin:
 			color.red = 64;
 			color.green = 64;
 			color.blue = 64;
 
-			WS2812_AddComet(color, 2);
+			WS2812_AddComet(color, 8);
 			break;
 	}
 }

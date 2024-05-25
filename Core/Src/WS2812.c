@@ -12,6 +12,9 @@
 #include "WS2812.h"
 
 uint8_t LEDData[NUM_LEDS][NUM_LED_PARAMS];
+
+color background = {.red = 0, .blue = 0, .green = 0};
+
 comet comets[NUM_MAX_COMETS];
 
 // Change to SPI handle connected to LEDs
@@ -42,15 +45,7 @@ void WS2812_SetLEDAdditive(uint8_t index, uint8_t red, uint8_t green, uint8_t bl
 	LEDData[index][2] = (LEDData[index][2] + blue) > UINT8_MAX ? 255 : (LEDData[index][2] + blue);
 }
 
-void WS2812_SetAllLEDsAdditive(uint8_t red, uint8_t green, uint8_t blue)
-{
-	for(int i = 0; i < NUM_LEDS; i++)
-	{
-		WS2812_SetLEDAdditive(i, red, green, blue);
-	}
-}
-
-void WS2812_ClearLEDs()
+void WS2812_ClearLEDs(void)
 {
 	for(int i = 0; i < NUM_LEDS; i++)
 	{
@@ -122,11 +117,14 @@ void WS2812_SendAll(void)
 {
 	for(int i = 0; i < NUM_LEDS; i++)
 	{
+		// Apply background color
+		WS2812_SetLEDAdditive(i, background.red, background.green, background.blue);
+
 		WS2812_SendSingleLED(LEDData[i][0], LEDData[i][1], LEDData[i][2]);
 	}
 }
 
-void WS2812_InitMultiCometEffect()
+void WS2812_InitMultiCometEffect(void)
 {
 	for(int i = 0; i < NUM_MAX_COMETS; i++)
 	{
@@ -160,7 +158,7 @@ void WS2812_AddComet(color color, uint8_t size)
 	comets[index].active = true;
 }
 
-void WS2812_MultiCometEffect()
+void WS2812_MultiCometEffect(void)
 {
 	// Fade LEDs one step
 	WS2812_FadeAll(2);
@@ -193,7 +191,7 @@ void WS2812_MultiCometEffect()
 	}
 }
 
-void WS2812_CometEffect()
+void WS2812_CometEffect(void)
 {
 	const uint8_t fadeAmount = 2;
 	const uint32_t cometSize = 5;
@@ -217,4 +215,9 @@ void WS2812_CometEffect()
 
 	// Fade LEDs one step
 	WS2812_FadeAll(fadeAmount);
+}
+
+void WS2812_SetBackgroundColor(color newColor)
+{
+	background = newColor;
 }
