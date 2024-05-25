@@ -25,24 +25,21 @@ void WS2812_SetLED(uint8_t index, uint8_t red, uint8_t green, uint8_t blue)
 		return;
 	}
 
-	LEDData[index][0] = index;
-
 	// These LEDs are supposed to use GRB color ordering, but RGB seems to be the real answer
-	LEDData[index][1] = red;
-	LEDData[index][2] = green;
-	LEDData[index][3] = blue;
+	LEDData[index][0] = red;
+	LEDData[index][1] = green;
+	LEDData[index][2] = blue;
 
-//	LEDData[index][1] = green;
-//	LEDData[index][2] = red;
-//	LEDData[index][3] = blue;
+//	LEDData[index][0] = green;
+//	LEDData[index][1] = red;
+//	LEDData[index][2] = blue;
 }
 
 void WS2812_SetLEDAdditive(uint8_t index, uint8_t red, uint8_t green, uint8_t blue)
 {
-	LEDData[index][0] = index;
-	LEDData[index][1] = (LEDData[index][1] + red) > UINT8_MAX ? 255 : (LEDData[index][1] + red);
-	LEDData[index][2] = (LEDData[index][2] + green) > UINT8_MAX ? 255 : (LEDData[index][2] + green);
-	LEDData[index][3] = (LEDData[index][3] + blue) > UINT8_MAX ? 255 : (LEDData[index][3] + blue);
+	LEDData[index][0] = (LEDData[index][0] + red) > UINT8_MAX ? 255 : (LEDData[index][0] + red);
+	LEDData[index][1] = (LEDData[index][1] + green) > UINT8_MAX ? 255 : (LEDData[index][1] + green);
+	LEDData[index][2] = (LEDData[index][2] + blue) > UINT8_MAX ? 255 : (LEDData[index][2] + blue);
 }
 
 void WS2812_SetAllLEDsAdditive(uint8_t red, uint8_t green, uint8_t blue)
@@ -53,11 +50,22 @@ void WS2812_SetAllLEDsAdditive(uint8_t red, uint8_t green, uint8_t blue)
 	}
 }
 
+void WS2812_ClearLEDs()
+{
+	for(int i = 0; i < NUM_LEDS; i++)
+	{
+		for(int j = 0; j <= 2; j++)
+		{
+			LEDData[i][j] = 0;
+		}
+	}
+}
+
 void WS2812_FadeAll(uint8_t denominator)
 {
 	for(int i = 0; i < NUM_LEDS; i++)
 	{
-		for(int j = 1; j <= 3; j++)
+		for(int j = 0; j <= 2; j++)
 		{
 			LEDData[i][j] /= denominator;
 		}
@@ -69,16 +77,16 @@ void WS2812_ShiftLEDs(int8_t shiftAmount)
 	uint8_t tmp[NUM_LEDS][NUM_LED_PARAMS];
 	for(int i = 0; i < NUM_LEDS; i++)
 	{
+		tmp[i][0] = LEDData[(i - shiftAmount) % NUM_LEDS][0];
 		tmp[i][1] = LEDData[(i - shiftAmount) % NUM_LEDS][1];
 		tmp[i][2] = LEDData[(i - shiftAmount) % NUM_LEDS][2];
-		tmp[i][3] = LEDData[(i - shiftAmount) % NUM_LEDS][3];
 	}
 
 	for(int i = 0; i < NUM_LEDS; i++)
 	{
+		LEDData[i][0] = tmp[i][0];
 		LEDData[i][1] = tmp[i][1];
 		LEDData[i][2] = tmp[i][2];
-		LEDData[i][3] = tmp[i][3];
 	}
 }
 
@@ -114,7 +122,7 @@ void WS2812_SendAll(void)
 {
 	for(int i = 0; i < NUM_LEDS; i++)
 	{
-		WS2812_SendSingleLED(LEDData[i][1], LEDData[i][2], LEDData[i][3]);
+		WS2812_SendSingleLED(LEDData[i][0], LEDData[i][1], LEDData[i][2]);
 	}
 }
 
