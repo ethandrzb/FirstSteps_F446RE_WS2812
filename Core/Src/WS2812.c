@@ -217,7 +217,9 @@ void WS2812_CometEffect(void)
 	WS2812_FadeAll(fadeAmount);
 }
 
-void WS2812_SetBackgroundColor(color newColor)
+void WS2812_SetBackgroundColor(uint8_t red, uint8_t green, uint8_t blue)
 {
-	background = newColor;
+	background.red = red;
+	background.green = green;
+	background.blue = blue;
 }
