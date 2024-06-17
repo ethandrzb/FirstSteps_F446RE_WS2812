@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define NUM_LEDS 100
+#define NUM_LEDS 97
 #define NUM_LED_PARAMS 3
 #define NUM_MAX_COMETS 10
 
