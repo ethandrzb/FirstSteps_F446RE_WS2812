@@ -6,6 +6,19 @@
  *      Adapted from ControllersTech's WS2812 video: https://youtu.be/71SRVEcbEwc
  */
 
+// TODO: Effects to implement
+// Meter: CV controls how many LEDs to fill
+// -- Parameters: Fill, direction, color
+// Strobe
+// -- Parameters: Enable (gate), strobe frequency, strobe pulse width, color
+// Marquis (likely implemented using MultiCometEffect)
+// -- Parameters: Number of chasing LEDs, direction, comet parameters, color, speed?
+// Single flash (gate triggered)
+// -- Implement by applying a configurable slew with separate attack and decay times to existing background control
+// Single stationary light
+// -- Parameters: Brightness attack and decay, color, size, location (random or CV)
+
+
 
 #include "main.h"
 #include <limits.h>
