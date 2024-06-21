@@ -37,7 +37,9 @@
 //#define SINGLE_COMET_EFFECT
 //#define MULTI_COMET_EFFECT
 //#define MANUAL_MULTI_COMET_EFFECT
-#define EXAMPLE_METER_EFFECT
+//#define EXAMPLE_SIMPLE_METER_EFFECT
+#define EXAMPLE_MIRRORED_METER_EFFECT
+
 //#define ENABLE_POTS_TO_BACKGROUND_COLOR
 /* USER CODE END PD */
 
@@ -59,7 +61,7 @@ uint8_t iterations = 0;
 
 uint16_t rawADCData[3];
 
-#ifdef EXAMPLE_METER_EFFECT
+#if defined(EXAMPLE_SIMPLE_METER_EFFECT) || defined(EXAMPLE_MIRRORED_METER_EFFECT)
 uint8_t meterLevels[] = {0, 0, 0};
 #endif
 /* USER CODE END PV */
@@ -131,7 +133,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 	// >> 3 to scale to comfortable range
 	WS2812_SetBackgroundColor(rawADCData[0] >> 3, rawADCData[1] >> 3, rawADCData[2] >> 3);
 #endif
-#ifdef EXAMPLE_METER_EFFECT
+#if defined(EXAMPLE_SIMPLE_METER_EFFECT) || defined(EXAMPLE_MIRRORED_METER_EFFECT)
 	meterLevels[0] = rawADCData[0] >> 1;
 	meterLevels[1] = rawADCData[1] >> 1;
 	meterLevels[2] = rawADCData[2] >> 1;
@@ -275,7 +277,7 @@ int main(void)
 	WS2812_SendAll();
 #endif
 
-#ifdef EXAMPLE_METER_EFFECT
+#ifdef EXAMPLE_SIMPLE_METER_EFFECT
 	WS2812_ClearLEDs();
 
 	color meterColor = {.red = 32, .green = 32, .blue = 0};
@@ -288,6 +290,21 @@ int main(void)
 	meterColor.green = 0;
 	meterColor.blue = 32;
 	WS2812_SimpleMeterEffect(meterColor, meterLevels[2], true);
+	WS2812_SendAll();
+#endif
+
+#ifdef EXAMPLE_MIRRORED_METER_EFFECT
+	WS2812_ClearLEDs();
+	color meterColor = {.red = 32, .green = 32, .blue = 0};
+	WS2812_MirroredMeterEffect(meterColor, meterLevels[0], false);
+	meterColor.red = 0;
+	meterColor.green = 32;
+	meterColor.blue = 32;
+	WS2812_MirroredMeterEffect(meterColor, meterLevels[1], true);
+	meterColor.red = 32;
+	meterColor.green = 0;
+	meterColor.blue = 32;
+	WS2812_MirroredMeterEffect(meterColor, meterLevels[2], true);
 	WS2812_SendAll();
 #endif
 

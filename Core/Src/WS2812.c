@@ -8,8 +8,6 @@
 
 // TODO: Move comets to own layer
 // TODO: Effects to implement
-// Meter: CV controls how many LEDs to fill
-// -- Parameters: Fill, direction, color
 // Strobe
 // -- Parameters: Enable (gate), strobe frequency, strobe pulse width, color
 // Marquis (likely implemented using MultiCometEffect)
@@ -268,6 +266,57 @@ void WS2812_SimpleMeterEffect(color color, uint8_t level, bool flip)
 		for(int i = level; i < NUM_LEDS; i++)
 		{
 			WS2812_SetLEDAdditive(i, color.red, color.green, color.blue);
+		}
+	}
+}
+
+void WS2812_MirroredMeterEffect(color color, uint8_t level, bool centered)
+{
+	// Half input level to account for the fact that two LEDs are filled for every increase in level
+	level >> 1;
+
+	if(centered)
+	{
+		for(int i = 0; i < NUM_LEDS; i++)
+		{
+			// Split strip into 3 zones and fill accordingly
+			// Zone 1: Unfilled [0, (NUM_LEDS >> 1) - level)
+			if(i < (NUM_LEDS >> 1) - level)
+			{
+				WS2812_SetLEDAdditive(i, 0, 0, 0);
+			}
+			// Zone 2: Filled [(NUM_LEDS >> 1) - level, (NUM_LEDS >> 1) + level]
+			else if(i < (NUM_LEDS >> 1) + level)
+			{
+				WS2812_SetLEDAdditive(i, color.red, color.green, color.blue);
+			}
+			// Zone 3: Unfilled ((NUM_LEDS >> 1) + level, NUM_LEDS)
+			else
+			{
+				WS2812_SetLEDAdditive(i, 0, 0, 0);
+			}
+		}
+	}
+	else
+	{
+		for(int i = 0; i < NUM_LEDS; i++)
+		{
+			// Split strip into 3 zones and fill accordingly
+			// Zone 1: Filled [0, (NUM_LEDS >> 1) - level)
+			if(i < (NUM_LEDS >> 1) - level)
+			{
+				WS2812_SetLEDAdditive(i, color.red, color.green, color.blue);
+			}
+			// Zone 2: Unfilled [(NUM_LEDS >> 1) - level, (NUM_LEDS >> 1) + level]
+			else if(i < (NUM_LEDS >> 1) + level)
+			{
+				WS2812_SetLEDAdditive(i, 0, 0, 0);
+			}
+			// Zone 3: Filled ((NUM_LEDS >> 1) + level, NUM_LEDS)
+			else
+			{
+				WS2812_SetLEDAdditive(i, color.red, color.green, color.blue);
+			}
 		}
 	}
 }
