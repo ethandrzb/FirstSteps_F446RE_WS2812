@@ -45,6 +45,7 @@ void WS2812_InitMultiCometEffect();
 void WS2812_AddComet(color color, uint8_t size);
 void WS2812_MultiCometEffect(void);
 void WS2812_CometEffect(void);
+void WS2812_SimpleMeterEffect(color color, uint8_t level, bool flip);
 void WS2812_SetBackgroundColor(uint8_t red, uint8_t green, uint8_t blue);
 
 #endif /* INC_WS2812_H_ */

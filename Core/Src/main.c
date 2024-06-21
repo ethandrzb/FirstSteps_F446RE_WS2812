@@ -36,8 +36,9 @@
 //#define EXAMPLE_3
 //#define SINGLE_COMET_EFFECT
 //#define MULTI_COMET_EFFECT
-#define MANUAL_MULTI_COMET_EFFECT
-#define ENABLE_POTS_TO_BACKGROUND_COLOR
+//#define MANUAL_MULTI_COMET_EFFECT
+#define EXAMPLE_METER_EFFECT
+//#define ENABLE_POTS_TO_BACKGROUND_COLOR
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -57,6 +58,10 @@ UART_HandleTypeDef huart2;
 uint8_t iterations = 0;
 
 uint16_t rawADCData[3];
+
+#ifdef EXAMPLE_METER_EFFECT
+uint8_t meterLevels[] = {0, 0, 0};
+#endif
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -119,11 +124,18 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
+#ifdef ENABLE_POTS_TO_BACKGROUND_COLOR
 	// TODO: Add threshold or other system to prevent noise picked up by the ADC from turning on the LEDs
 	// Masking out the LSBs works, but significantly reduces the resolution of the brightness control
 
 	// >> 3 to scale to comfortable range
 	WS2812_SetBackgroundColor(rawADCData[0] >> 3, rawADCData[1] >> 3, rawADCData[2] >> 3);
+#endif
+#ifdef EXAMPLE_METER_EFFECT
+	meterLevels[0] = rawADCData[0] >> 1;
+	meterLevels[1] = rawADCData[1] >> 1;
+	meterLevels[2] = rawADCData[2] >> 1;
+#endif
 }
 /* USER CODE END 0 */
 
@@ -263,9 +275,23 @@ int main(void)
 	WS2812_SendAll();
 #endif
 
-#ifdef ENABLE_POTS_TO_BACKGROUND_COLOR
-	HAL_ADC_Start_DMA(&hadc1, (uint32_t *) rawADCData, 3);
+#ifdef EXAMPLE_METER_EFFECT
+	WS2812_ClearLEDs();
+
+	color meterColor = {.red = 32, .green = 32, .blue = 0};
+	WS2812_SimpleMeterEffect(meterColor, meterLevels[0], true);
+	meterColor.red = 0;
+	meterColor.green = 32;
+	meterColor.blue = 32;
+	WS2812_SimpleMeterEffect(meterColor, meterLevels[1], true);
+	meterColor.red = 32;
+	meterColor.green = 0;
+	meterColor.blue = 32;
+	WS2812_SimpleMeterEffect(meterColor, meterLevels[2], true);
+	WS2812_SendAll();
 #endif
+
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t *) rawADCData, 3);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

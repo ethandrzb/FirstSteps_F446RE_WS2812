@@ -6,6 +6,7 @@
  *      Adapted from ControllersTech's WS2812 video: https://youtu.be/71SRVEcbEwc
  */
 
+// TODO: Move comets to own layer
 // TODO: Effects to implement
 // Meter: CV controls how many LEDs to fill
 // -- Parameters: Fill, direction, color
@@ -228,6 +229,47 @@ void WS2812_CometEffect(void)
 
 	// Fade LEDs one step
 	WS2812_FadeAll(fadeAmount);
+}
+
+// Fills LEDs from one or both ends to display the value level on the LED strip
+void WS2812_SimpleMeterEffect(color color, uint8_t level, bool flip)
+{
+	// Clip level
+	level = (level <= NUM_LEDS) ? level : NUM_LEDS;
+
+	// Fill low index to high index
+	if(flip)
+	{
+		// Filled portion
+		for(int i = 0; i < level; i++)
+		{
+			WS2812_SetLEDAdditive(i, color.red, color.green, color.blue);
+		}
+
+		// Unfilled portion
+		for(int i = level; i < NUM_LEDS; i++)
+		{
+			WS2812_SetLEDAdditive(i, 0, 0, 0);
+		}
+	}
+	// Fill high index to low index
+	else
+	{
+		// Reverse fill amount to preserve higher level ==> more LEDs filled
+		level = NUM_LEDS - level;
+
+		// Unfilled portion
+		for(int i = 0; i < level; i++)
+		{
+			WS2812_SetLEDAdditive(i, 0, 0, 0);
+		}
+
+		// Filled portion
+		for(int i = level; i < NUM_LEDS; i++)
+		{
+			WS2812_SetLEDAdditive(i, color.red, color.green, color.blue);
+		}
+	}
 }
 
 void WS2812_SetBackgroundColor(uint8_t red, uint8_t green, uint8_t blue)
