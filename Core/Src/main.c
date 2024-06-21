@@ -87,15 +87,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	switch(GPIO_Pin)
 	{
 		case BTN1_Pin:
-			color.red = 64;
+			color.red = 96;
 			color.green = 0;
 			color.blue = 0;
 
-			WS2812_AddComet(color, 1);
+			WS2812_AddComet(color, 2);
 			break;
 		case BTN2_Pin:
 			color.red = 0;
-			color.green = 64;
+			color.green = 96;
 			color.blue = 0;
 
 			WS2812_AddComet(color, 2);
@@ -103,23 +103,27 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		case BTN3_Pin:
 			color.red = 0;
 			color.green = 0;
-			color.blue = 64;
+			color.blue = 96;
 
-			WS2812_AddComet(color, 4);
+			WS2812_AddComet(color, 2);
 			break;
 		case BTN4_Pin:
-			color.red = 64;
-			color.green = 64;
-			color.blue = 64;
+			color.red = 96;
+			color.green = 96;
+			color.blue = 96;
 
-			WS2812_AddComet(color, 8);
+			WS2812_AddComet(color, 2);
 			break;
 	}
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
-	WS2812_SetBackgroundColor(rawADCData[0], rawADCData[1], rawADCData[2]);
+	// TODO: Add threshold or other system to prevent noise picked up by the ADC from turning on the LEDs
+	// Masking out the LSBs works, but significantly reduces the resolution of the brightness control
+
+	// >> 3 to scale to comfortable range
+	WS2812_SetBackgroundColor(rawADCData[0] >> 3, rawADCData[1] >> 3, rawADCData[2] >> 3);
 }
 /* USER CODE END 0 */
 
