@@ -337,17 +337,13 @@ int main(void)
 #endif
 
 #ifdef EXAMPLE_STROBE
-
-	// I shouldn't need to call this function for this effect, but the timer won't start without it
-	WS2812_ClearLEDs();
-
 	if(htim2.Instance->CNT > 40000)
 	{
-		WS2812_SetBackgroundColor(32, 32, 32);
+		WS2812_SetAllLEDs(32, 32, 32);
 	}
 	else
 	{
-		WS2812_SetBackgroundColor(0, 0, 0);
+		WS2812_SetAllLEDs(0, 0, 0);
 	}
 
 	WS2812_SendAll();

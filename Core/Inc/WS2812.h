@@ -36,6 +36,7 @@ typedef struct comet
 
 void WS2812_SetLED(uint8_t index, uint8_t red, uint8_t green, uint8_t blue);
 void WS2812_SetLEDAdditive(uint8_t index, uint8_t red, uint8_t green, uint8_t blue);
+void WS2812_SetAllLEDs(uint32_t red, uint32_t green, uint32_t blue);
 void WS2812_ClearLEDs(void);
 void WS2812_FadeAll(uint8_t denominator);
 void WS2812_ShiftLEDs(int8_t shiftAmount);

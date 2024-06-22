@@ -57,6 +57,14 @@ void WS2812_SetLEDAdditive(uint8_t index, uint8_t red, uint8_t green, uint8_t bl
 	LEDData[index][2] = (LEDData[index][2] + blue) > UINT8_MAX ? 255 : (LEDData[index][2] + blue);
 }
 
+void WS2812_SetAllLEDs(uint32_t red, uint32_t green, uint32_t blue)
+{
+	for(int i = 0; i < NUM_LEDS; i++)
+	{
+		WS2812_SetLED(i, red, green, blue);
+	}
+}
+
 void WS2812_ClearLEDs(void)
 {
 	for(int i = 0; i < NUM_LEDS; i++)
