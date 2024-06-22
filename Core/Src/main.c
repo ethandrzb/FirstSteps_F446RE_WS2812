@@ -42,7 +42,8 @@
 //#define MANUAL_MULTI_COMET_EFFECT
 //#define EXAMPLE_SIMPLE_METER_EFFECT
 //#define EXAMPLE_MIRRORED_METER_EFFECT
-#define EXAMPLE_STROBE
+//#define EXAMPLE_SIMPLE_GATED_STROBE
+#define EXAMPLE_VARIABLE_PERIOD_GATED_STROBE
 
 // Should not be enabled if either EXAMPLE_SIMPLE_METER_EFFECT or EXAMPLE_MIRRORED_METER_EFFECT is enabled
 //#define ENABLE_POTS_TO_BACKGROUND_COLOR
@@ -70,6 +71,10 @@ uint16_t rawADCData[3];
 
 #if defined(EXAMPLE_SIMPLE_METER_EFFECT) || defined(EXAMPLE_MIRRORED_METER_EFFECT)
 uint8_t meterLevels[] = {0, 0, 0};
+#endif
+
+#ifdef EXAMPLE_VARIABLE_PERIOD_GATED_STROBE
+uint32_t strobePeriodOffsetTicks = 0;
 #endif
 /* USER CODE END PV */
 
@@ -133,7 +138,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	}
 #endif
 
-#ifdef EXAMPLE_STROBE
+#if defined(EXAMPLE_SIMPLE_GATED_STROBE) || defined(EXAMPLE_VARIABLE_PERIOD_GATED_STROBE)
 	if(GPIO_Pin == BTN1_Pin)
 	{
 		if(!HAL_GPIO_ReadPin(BTN1_GPIO_Port, BTN1_Pin))
@@ -162,6 +167,19 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 	meterLevels[0] = rawADCData[0] >> 1;
 	meterLevels[1] = rawADCData[1] >> 1;
 	meterLevels[2] = rawADCData[2] >> 1;
+#endif
+
+#ifdef EXAMPLE_VARIABLE_PERIOD_GATED_STROBE
+	strobePeriodOffsetTicks = 80000 + (rawADCData[0] << 9);
+	htim2.Instance->ARR = strobePeriodOffsetTicks;
+
+	// Changing the auto-reload register (ARR) with an input clock this fast occasionally allows the count (CNT)
+		// register to exceed the ARR and preventing it from resetting at that value
+	// As a result, we have to add our own reset condition to prevent this from happening.
+	if(htim2.Instance->CNT > htim2.Instance->ARR)
+	{
+		htim2.Instance->CNT = 0;
+	}
 #endif
 }
 
@@ -336,8 +354,22 @@ int main(void)
 	WS2812_SendAll();
 #endif
 
-#ifdef EXAMPLE_STROBE
+#ifdef EXAMPLE_SIMPLE_GATED_STROBE
 	if(htim2.Instance->CNT > 40000)
+	{
+		WS2812_SetAllLEDs(32, 32, 32);
+	}
+	else
+	{
+		WS2812_SetAllLEDs(0, 0, 0);
+	}
+
+	WS2812_SendAll();
+#endif
+
+#ifdef EXAMPLE_VARIABLE_PERIOD_GATED_STROBE
+	//  Divide by 2 for 50% duty cycle
+	if(htim2.Instance->CNT > strobePeriodOffsetTicks >> 1)
 	{
 		WS2812_SetAllLEDs(32, 32, 32);
 	}
