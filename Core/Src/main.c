@@ -43,7 +43,7 @@
 //#define EXAMPLE_SIMPLE_METER_EFFECT
 //#define EXAMPLE_MIRRORED_METER_EFFECT
 //#define EXAMPLE_SIMPLE_GATED_STROBE
-#define EXAMPLE_VARIABLE_PERIOD_GATED_STROBE
+#define EXAMPLE_VARIABLE_GATED_STROBE
 
 // Should not be enabled if either EXAMPLE_SIMPLE_METER_EFFECT or EXAMPLE_MIRRORED_METER_EFFECT is enabled
 //#define ENABLE_POTS_TO_BACKGROUND_COLOR
@@ -73,8 +73,9 @@ uint16_t rawADCData[3];
 uint8_t meterLevels[] = {0, 0, 0};
 #endif
 
-#ifdef EXAMPLE_VARIABLE_PERIOD_GATED_STROBE
+#ifdef EXAMPLE_VARIABLE_GATED_STROBE
 uint32_t strobePeriodOffsetTicks = 0;
+uint32_t strobeActiveTicks = 0;
 #endif
 /* USER CODE END PV */
 
@@ -138,7 +139,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	}
 #endif
 
-#if defined(EXAMPLE_SIMPLE_GATED_STROBE) || defined(EXAMPLE_VARIABLE_PERIOD_GATED_STROBE)
+#if defined(EXAMPLE_SIMPLE_GATED_STROBE) || defined(EXAMPLE_VARIABLE_GATED_STROBE)
 	if(GPIO_Pin == BTN1_Pin)
 	{
 		if(!HAL_GPIO_ReadPin(BTN1_GPIO_Port, BTN1_Pin))
@@ -169,7 +170,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 	meterLevels[2] = rawADCData[2] >> 1;
 #endif
 
-#ifdef EXAMPLE_VARIABLE_PERIOD_GATED_STROBE
+#ifdef EXAMPLE_VARIABLE_GATED_STROBE
 	strobePeriodOffsetTicks = 80000 + (rawADCData[0] << 9);
 	htim2.Instance->ARR = strobePeriodOffsetTicks;
 
@@ -180,6 +181,15 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 	{
 		htim2.Instance->CNT = 0;
 	}
+
+	// Map ADC channel 1 to strobe active period
+	// ADC is configured in 8-bit mode, so we multiply by the channel value divide by the max value (256)
+		// to scale the measured value relative to the period
+	// Bit shifting is faster than dividing, so we right shift by 8 instead of dividing by 256
+	strobeActiveTicks = (strobePeriodOffsetTicks * rawADCData[1]) >> 8;
+
+	// Reverse active and inactive periods
+	strobeActiveTicks = strobePeriodOffsetTicks - strobeActiveTicks;
 #endif
 }
 
@@ -367,9 +377,8 @@ int main(void)
 	WS2812_SendAll();
 #endif
 
-#ifdef EXAMPLE_VARIABLE_PERIOD_GATED_STROBE
-	//  Divide by 2 for 50% duty cycle
-	if(htim2.Instance->CNT > strobePeriodOffsetTicks >> 1)
+#ifdef EXAMPLE_VARIABLE_GATED_STROBE
+	if(htim2.Instance->CNT > strobeActiveTicks)
 	{
 		WS2812_SetAllLEDs(32, 32, 32);
 	}

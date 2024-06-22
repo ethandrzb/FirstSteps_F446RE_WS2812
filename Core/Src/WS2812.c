@@ -8,8 +8,6 @@
 
 // TODO: Move comets to own layer
 // TODO: Effects to implement
-// Strobe
-// -- Parameters: Enable (gate), strobe frequency, strobe pulse width, color
 // Marquis (likely implemented using MultiCometEffect)
 // -- Parameters: Number of chasing LEDs, direction, comet parameters, color, speed?
 // Single flash (gate triggered)
