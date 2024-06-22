@@ -31,6 +31,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+// NOTE: It is not recommended to enable more than one example
+
 //#define EXAMPLE_1
 //#define EXAMPLE_2
 //#define EXAMPLE_3
@@ -38,8 +41,10 @@
 //#define MULTI_COMET_EFFECT
 //#define MANUAL_MULTI_COMET_EFFECT
 //#define EXAMPLE_SIMPLE_METER_EFFECT
-#define EXAMPLE_MIRRORED_METER_EFFECT
+//#define EXAMPLE_MIRRORED_METER_EFFECT
+#define EXAMPLE_STROBE
 
+// Should not be enabled if either EXAMPLE_SIMPLE_METER_EFFECT or EXAMPLE_MIRRORED_METER_EFFECT is enabled
 //#define ENABLE_POTS_TO_BACKGROUND_COLOR
 /* USER CODE END PD */
 
@@ -53,6 +58,8 @@ ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 
 SPI_HandleTypeDef hspi3;
+
+TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart2;
 
@@ -73,6 +80,7 @@ static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_SPI3_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -89,6 +97,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 //	// Start debounce timer
 //	HAL_TIM_Base_Start_IT(&htim6);
 
+#ifdef MANUAL_MULTI_COMET_EFFECT
 	color color;
 
 	switch(GPIO_Pin)
@@ -122,6 +131,22 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			WS2812_AddComet(color, 2);
 			break;
 	}
+#endif
+
+#ifdef EXAMPLE_STROBE
+	if(GPIO_Pin == BTN1_Pin)
+	{
+		if(!HAL_GPIO_ReadPin(BTN1_GPIO_Port, BTN1_Pin))
+		{
+			HAL_TIM_Base_Start(&htim2);
+		}
+		else
+		{
+			HAL_TIM_Base_Stop(&htim2);
+			htim2.Instance->CNT = 0;
+		}
+	}
+#endif
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
@@ -139,6 +164,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 	meterLevels[2] = rawADCData[2] >> 1;
 #endif
 }
+
 /* USER CODE END 0 */
 
 /**
@@ -174,6 +200,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_SPI3_Init();
   MX_ADC1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   // Initialize all LEDs to off
   WS2812_ClearLEDs();
@@ -183,6 +210,7 @@ int main(void)
 #if defined(MULTI_COMET_EFFECT) || defined(MANUAL_MULTI_COMET_EFFECT)
   WS2812_InitMultiCometEffect();
 #endif
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -308,6 +336,22 @@ int main(void)
 	WS2812_SendAll();
 #endif
 
+#ifdef EXAMPLE_STROBE
+
+	// I shouldn't need to call this function for this effect, but the timer won't start without it
+	WS2812_ClearLEDs();
+
+	if(htim2.Instance->CNT > 40000)
+	{
+		WS2812_SetBackgroundColor(32, 32, 32);
+	}
+	else
+	{
+		WS2812_SetBackgroundColor(0, 0, 0);
+	}
+
+	WS2812_SendAll();
+#endif
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t *) rawADCData, 3);
     /* USER CODE END WHILE */
 
@@ -472,6 +516,51 @@ static void MX_SPI3_Init(void)
 }
 
 /**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 80-1;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 80000-1;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -553,11 +642,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : BTN2_Pin BTN1_Pin */
-  GPIO_InitStruct.Pin = BTN2_Pin|BTN1_Pin;
+  /*Configure GPIO pin : BTN2_Pin */
+  GPIO_InitStruct.Pin = BTN2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(BTN2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : BTN1_Pin */
+  GPIO_InitStruct.Pin = BTN1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(BTN1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : BTN3_Pin BTN4_Pin */
   GPIO_InitStruct.Pin = BTN3_Pin|BTN4_Pin;
