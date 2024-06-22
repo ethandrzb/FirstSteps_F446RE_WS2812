@@ -279,7 +279,7 @@ void WS2812_SimpleMeterEffect(color color, uint8_t level, bool flip)
 void WS2812_MirroredMeterEffect(color color, uint8_t level, bool centered)
 {
 	// Half input level to account for the fact that two LEDs are filled for every increase in level
-	level >> 1;
+	level >>= 1;
 
 	// Clip level
 	level = (level <= NUM_LEDS >> 1) ? level : NUM_LEDS >> 1;
