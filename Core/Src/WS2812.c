@@ -281,6 +281,9 @@ void WS2812_MirroredMeterEffect(color color, uint8_t level, bool centered)
 	// Half input level to account for the fact that two LEDs are filled for every increase in level
 	level >> 1;
 
+	// Clip level
+	level = (level <= NUM_LEDS >> 1) ? level : NUM_LEDS >> 1;
+
 	if(centered)
 	{
 		for(int i = 0; i < NUM_LEDS; i++)
@@ -305,6 +308,9 @@ void WS2812_MirroredMeterEffect(color color, uint8_t level, bool centered)
 	}
 	else
 	{
+		// Reverse fill amount to preserve higher level ==> more LEDs filled
+		level = (NUM_LEDS >> 1) - level;
+
 		for(int i = 0; i < NUM_LEDS; i++)
 		{
 			// Split strip into 3 zones and fill accordingly
