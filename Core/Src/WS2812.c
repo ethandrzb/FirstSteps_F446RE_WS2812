@@ -19,6 +19,7 @@
 
 #include "main.h"
 #include <limits.h>
+#include <math.h>
 #include "WS2812.h"
 
 uint8_t LEDData[NUM_LEDS][NUM_LED_PARAMS];
@@ -338,4 +339,60 @@ void WS2812_SetBackgroundColor(uint8_t red, uint8_t green, uint8_t blue)
 	background.red = red;
 	background.green = green;
 	background.blue = blue;
+}
+
+color WS2812_HSVToRGB(uint16_t hue, float saturation, float value)
+{
+	color retVal = {.red = 0, .green = 0, .blue = 0};
+
+	float chroma = value * saturation;
+	float x = chroma * (1.0f - fabs(fmod(((double)hue / 60.0f), 2.0) - 1.0f));
+	float m = value - chroma;
+
+	float red_prime = 0.0f;
+	float green_prime = 0.0f;
+	float blue_prime = 0.0f;
+
+	if(hue >= 0 && hue < 60)
+	{
+		red_prime = chroma;
+		green_prime = x;
+		blue_prime = 0.0f;
+	}
+	else if(hue >= 60 && hue < 120)
+	{
+		red_prime = x;
+		green_prime = chroma;
+		blue_prime = 0.0f;
+	}
+	else if(hue >= 120 && hue < 180)
+	{
+		red_prime = 0.0f;
+		green_prime = chroma;
+		blue_prime = x;
+	}
+	else if(hue >= 180 && hue < 240)
+	{
+		red_prime = 0.0f;
+		green_prime = x;
+		blue_prime = chroma;
+	}
+	else if(hue >= 240 && hue < 300)
+	{
+		red_prime = x;
+		green_prime = 0.0f;
+		blue_prime = chroma;
+	}
+	else if(hue >= 300 && hue < 360)
+	{
+		red_prime = chroma;
+		green_prime = 0.0f;
+		blue_prime = x;
+	}
+
+	retVal.red = (red_prime + m) * 255.0;
+	retVal.green = (green_prime + m) * 255.0;
+	retVal.blue = (blue_prime + m) * 255.0;
+
+	return retVal;
 }

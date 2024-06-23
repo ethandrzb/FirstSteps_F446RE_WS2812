@@ -49,5 +49,6 @@ void WS2812_CometEffect(void);
 void WS2812_SimpleMeterEffect(color color, uint8_t level, bool flip);
 void WS2812_MirroredMeterEffect(color color, uint8_t level, bool centered);
 void WS2812_SetBackgroundColor(uint8_t red, uint8_t green, uint8_t blue);
+color WS2812_HSVToRGB(uint16_t hue, float saturation, float value);
 
 #endif /* INC_WS2812_H_ */

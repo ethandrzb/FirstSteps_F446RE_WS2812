@@ -39,14 +39,14 @@
 //#define EXAMPLE_3
 //#define SINGLE_COMET_EFFECT
 //#define MULTI_COMET_EFFECT
-//#define MANUAL_MULTI_COMET_EFFECT
+#define MANUAL_MULTI_COMET_EFFECT
 //#define EXAMPLE_SIMPLE_METER_EFFECT
 //#define EXAMPLE_MIRRORED_METER_EFFECT
 //#define EXAMPLE_SIMPLE_GATED_STROBE
-#define EXAMPLE_VARIABLE_GATED_STROBE
+//#define EXAMPLE_VARIABLE_GATED_STROBE
 
 // Should not be enabled if either EXAMPLE_SIMPLE_METER_EFFECT or EXAMPLE_MIRRORED_METER_EFFECT is enabled
-//#define ENABLE_POTS_TO_BACKGROUND_COLOR
+#define ENABLE_POTS_TO_BACKGROUND_COLOR
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -162,7 +162,11 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 	// Masking out the LSBs works, but significantly reduces the resolution of the brightness control
 
 	// >> 3 to scale to comfortable range
-	WS2812_SetBackgroundColor(rawADCData[0] >> 3, rawADCData[1] >> 3, rawADCData[2] >> 3);
+//	WS2812_SetBackgroundColor(rawADCData[0] >> 3, rawADCData[1] >> 3, rawADCData[2] >> 3);
+
+	color rgb = WS2812_HSVToRGB((uint16_t)(((float)rawADCData[0] * 360) / 256.0f), ((float)rawADCData[1]) / 255.0f, ((float)rawADCData[2]) / 255.0f);
+
+	WS2812_SetBackgroundColor(rgb.red, rgb.green, rgb.blue);
 #endif
 #if defined(EXAMPLE_SIMPLE_METER_EFFECT) || defined(EXAMPLE_MIRRORED_METER_EFFECT)
 	meterLevels[0] = rawADCData[0] >> 1;
