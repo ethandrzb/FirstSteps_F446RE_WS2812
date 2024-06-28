@@ -44,7 +44,8 @@
 //#define EXAMPLE_MIRRORED_METER_EFFECT
 //#define EXAMPLE_SIMPLE_GATED_STROBE
 //#define EXAMPLE_VARIABLE_GATED_STROBE
-#define EXAMPLE_SCROLL_RAINBOW
+//#define EXAMPLE_SCROLL_RAINBOW
+#define EXAMPLE_MANUAL_RAINBOW
 
 // Should not be enabled if either EXAMPLE_SIMPLE_METER_EFFECT or EXAMPLE_MIRRORED_METER_EFFECT is enabled
 //#define ENABLE_POTS_TO_BACKGROUND_COLOR
@@ -77,6 +78,11 @@ uint8_t meterLevels[] = {0, 0, 0};
 #ifdef EXAMPLE_VARIABLE_GATED_STROBE
 uint32_t strobePeriodOffsetTicks = 0;
 uint32_t strobeActiveTicks = 0;
+#endif
+
+#ifdef EXAMPLE_MANUAL_RAINBOW
+static colorHSV hsv = {.hue = 0, .saturation = 1.0f, .value = 0.1f};
+int8_t deltaHue = 0;
 #endif
 /* USER CODE END PV */
 
@@ -195,6 +201,12 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 
 	// Reverse active and inactive periods
 	strobeActiveTicks = strobePeriodOffsetTicks - strobeActiveTicks;
+#endif
+
+#ifdef EXAMPLE_MANUAL_RAINBOW
+	hsv.hue = (uint16_t)(((float)rawADCData[0] * 360) / 256.0f);
+//	deltaHue = 127 - ((int8_t)(rawADCData[1]));
+	deltaHue = (int8_t)(rawADCData[1] >> 1);
 #endif
 }
 
@@ -401,6 +413,12 @@ int main(void)
 	hsv.hue = (hsv.hue < 360) ? hsv.hue + 1 : 0;
 
 	WS2812_FillRainbow(hsv, 3);
+
+	WS2812_SendAll();
+#endif
+
+#ifdef EXAMPLE_MANUAL_RAINBOW
+	WS2812_FillRainbow(hsv, deltaHue);
 
 	WS2812_SendAll();
 #endif
