@@ -32,6 +32,7 @@ comet comets[NUM_MAX_COMETS];
 extern SPI_HandleTypeDef hspi3;
 #define LED_SPI hspi3
 
+// Sets the color of the LED at index to the specified RGB values in the LEDData buffer
 void WS2812_SetLED(uint8_t index, uint8_t red, uint8_t green, uint8_t blue)
 {
 	if(index >= NUM_LEDS)
@@ -49,6 +50,7 @@ void WS2812_SetLED(uint8_t index, uint8_t red, uint8_t green, uint8_t blue)
 //	LEDData[index][2] = blue;
 }
 
+// Adds the RGB color values to the LED at index in the LEDData buffer
 void WS2812_SetLEDAdditive(uint8_t index, uint8_t red, uint8_t green, uint8_t blue)
 {
 	LEDData[index][0] = (LEDData[index][0]  + red) > UINT8_MAX ? 255 : (LEDData[index][0] + red);
@@ -56,6 +58,7 @@ void WS2812_SetLEDAdditive(uint8_t index, uint8_t red, uint8_t green, uint8_t bl
 	LEDData[index][2] = (LEDData[index][2] + blue) > UINT8_MAX ? 255 : (LEDData[index][2] + blue);
 }
 
+// Sets the color of all LEDs to the specified RGB color
 void WS2812_SetAllLEDs(uint32_t red, uint32_t green, uint32_t blue)
 {
 	for(int i = 0; i < NUM_LEDS; i++)
@@ -64,6 +67,7 @@ void WS2812_SetAllLEDs(uint32_t red, uint32_t green, uint32_t blue)
 	}
 }
 
+// Sets the color of all LEDs to black
 void WS2812_ClearLEDs(void)
 {
 	for(int i = 0; i < NUM_LEDS; i++)
@@ -75,6 +79,7 @@ void WS2812_ClearLEDs(void)
 	}
 }
 
+// Fades all LEDs in LEDData by the specified denominator
 void WS2812_FadeAll(uint8_t denominator)
 {
 	for(int i = 0; i < NUM_LEDS; i++)
@@ -86,6 +91,7 @@ void WS2812_FadeAll(uint8_t denominator)
 	}
 }
 
+// Moves the position the values of the LEDs by shiftAmount in LEDData
 void WS2812_ShiftLEDs(int8_t shiftAmount)
 {
 	uint8_t tmp[NUM_LEDS][NUM_LED_PARAMS];
@@ -104,6 +110,7 @@ void WS2812_ShiftLEDs(int8_t shiftAmount)
 	}
 }
 
+// Sends the RGB color value for a single LED to the LED strip
 void WS2812_SendSingleLED(uint32_t red, uint32_t green, uint32_t blue)
 {
 	uint32_t color = (green << 16) | (red << 8) | (blue);
@@ -132,6 +139,7 @@ void WS2812_SendSingleLED(uint32_t red, uint32_t green, uint32_t blue)
 	HAL_SPI_Transmit(&LED_SPI, data, 24, 1000);
 }
 
+// Sends all color values in LEDData to the LED strip
 void WS2812_SendAll(void)
 {
 	for(int i = 0; i < NUM_LEDS; i++)
@@ -143,6 +151,7 @@ void WS2812_SendAll(void)
 	}
 }
 
+// Initializes and deactivates all comets in buffer
 void WS2812_InitMultiCometEffect(void)
 {
 	for(int i = 0; i < NUM_MAX_COMETS; i++)
@@ -156,6 +165,9 @@ void WS2812_InitMultiCometEffect(void)
 	}
 }
 
+// Adds a comet to be processed by WS2812_MultiCometEffect
+// color: Color of comet
+// size: number of pixels used for body of comet
 void WS2812_AddComet(color color, uint8_t size)
 {
 	uint16_t index = 0;
@@ -177,6 +189,7 @@ void WS2812_AddComet(color color, uint8_t size)
 	comets[index].active = true;
 }
 
+// Draws all comets to LEDData and updates their position
 void WS2812_MultiCometEffect(void)
 {
 	// Fade LEDs one step
@@ -210,6 +223,7 @@ void WS2812_MultiCometEffect(void)
 	}
 }
 
+// Handles and draws a single comet to LEDData
 void WS2812_CometEffect(void)
 {
 	const uint8_t fadeAmount = 2;
@@ -236,7 +250,10 @@ void WS2812_CometEffect(void)
 	WS2812_FadeAll(fadeAmount);
 }
 
-// Fills LEDs from one or both ends to display the value level on the LED strip
+// Fills LEDs from one end to display the value level on the LED strip
+// color: Color of filled LEDs
+// level: Number of LEDs to fill
+// flip: Changes fill direction
 void WS2812_SimpleMeterEffect(color color, uint8_t level, bool flip)
 {
 	// Clip level
@@ -277,6 +294,11 @@ void WS2812_SimpleMeterEffect(color color, uint8_t level, bool flip)
 	}
 }
 
+// Fills LEDs from both ends or from the center to display the value level on the LED strip
+// color: Color of filled LEDs
+// level: Number of LEDs to fill
+// centered: If true, the meters are drawn from the middle LED in the strip towards the ends.
+	// Otherwise, the meters are drawn from each end towards the center of the strip
 void WS2812_MirroredMeterEffect(color color, uint8_t level, bool centered)
 {
 	// Half input level to account for the fact that two LEDs are filled for every increase in level
@@ -334,6 +356,7 @@ void WS2812_MirroredMeterEffect(color color, uint8_t level, bool centered)
 	}
 }
 
+// Sets the color added to all LED colors prior to being sent to the strip
 void WS2812_SetBackgroundColor(uint8_t red, uint8_t green, uint8_t blue)
 {
 	background.red = red;
@@ -341,6 +364,11 @@ void WS2812_SetBackgroundColor(uint8_t red, uint8_t green, uint8_t blue)
 	background.blue = blue;
 }
 
+
+// Converts a HSV color to an RGB color struct
+// hue: [0,360]
+// saturation: [0,1]
+// value: [0,1]
 color WS2812_HSVToRGB(uint16_t hue, float saturation, float value)
 {
 	color retVal = {.red = 0, .green = 0, .blue = 0};
