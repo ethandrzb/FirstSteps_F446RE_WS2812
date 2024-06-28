@@ -8,6 +8,8 @@
 
 // TODO: Move comets to own layer
 // TODO: Effects to implement
+// Scrolling rainbow
+// -- Parameters: starting hue, delta hue
 // Marquis (likely implemented using MultiCometEffect)
 // -- Parameters: Number of chasing LEDs, direction, comet parameters, color, speed?
 // Single flash (gate triggered)
@@ -24,7 +26,7 @@
 
 uint8_t LEDData[NUM_LEDS][NUM_LED_PARAMS];
 
-color background = {.red = 0, .blue = 0, .green = 0};
+colorRGB background = {.red = 0, .blue = 0, .green = 0};
 
 comet comets[NUM_MAX_COMETS];
 
@@ -168,7 +170,7 @@ void WS2812_InitMultiCometEffect(void)
 // Adds a comet to be processed by WS2812_MultiCometEffect
 // color: Color of comet
 // size: number of pixels used for body of comet
-void WS2812_AddComet(color color, uint8_t size)
+void WS2812_AddComet(colorRGB color, uint8_t size)
 {
 	uint16_t index = 0;
 
@@ -254,7 +256,7 @@ void WS2812_CometEffect(void)
 // color: Color of filled LEDs
 // level: Number of LEDs to fill
 // flip: Changes fill direction
-void WS2812_SimpleMeterEffect(color color, uint8_t level, bool flip)
+void WS2812_SimpleMeterEffect(colorRGB color, uint8_t level, bool flip)
 {
 	// Clip level
 	level = (level <= NUM_LEDS) ? level : NUM_LEDS;
@@ -299,7 +301,7 @@ void WS2812_SimpleMeterEffect(color color, uint8_t level, bool flip)
 // level: Number of LEDs to fill
 // centered: If true, the meters are drawn from the middle LED in the strip towards the ends.
 	// Otherwise, the meters are drawn from each end towards the center of the strip
-void WS2812_MirroredMeterEffect(color color, uint8_t level, bool centered)
+void WS2812_MirroredMeterEffect(colorRGB color, uint8_t level, bool centered)
 {
 	// Half input level to account for the fact that two LEDs are filled for every increase in level
 	level >>= 1;
@@ -356,6 +358,51 @@ void WS2812_MirroredMeterEffect(color color, uint8_t level, bool centered)
 	}
 }
 
+void WS2812_FillRainbow(colorHSV startingColor, int8_t deltaHue)
+{
+	bool fillForward = true;
+
+	if(deltaHue < 0)
+	{
+		deltaHue *= -1;
+		fillForward = false;
+	}
+
+	if(fillForward)
+	{
+		for(int i = 0; i < NUM_LEDS; i++)
+		{
+			colorRGB rgb = WS2812_HSVToRGB(startingColor.hue, startingColor.saturation, startingColor.value);
+
+			WS2812_SetLED(i, rgb.red, rgb.green, rgb.blue);
+
+			startingColor.hue += deltaHue;
+
+			if(startingColor.hue >= 360)
+			{
+				startingColor.hue -= 360;
+			}
+		}
+	}
+	else
+	{
+		for(int i = NUM_LEDS - 1; i >= 0; i--)
+		{
+			colorRGB rgb = WS2812_HSVToRGB(startingColor.hue, startingColor.saturation, startingColor.value);
+
+			WS2812_SetLED(i, rgb.red, rgb.green, rgb.blue);
+
+			startingColor.hue += deltaHue;
+
+			if(startingColor.hue >= 360)
+			{
+				startingColor.hue -= 360;
+			}
+		}
+	}
+
+}
+
 // Sets the color added to all LED colors prior to being sent to the strip
 void WS2812_SetBackgroundColor(uint8_t red, uint8_t green, uint8_t blue)
 {
@@ -366,12 +413,12 @@ void WS2812_SetBackgroundColor(uint8_t red, uint8_t green, uint8_t blue)
 
 
 // Converts a HSV color to an RGB color struct
-// hue: [0,360]
+// hue: [0,360)
 // saturation: [0,1]
 // value: [0,1]
-color WS2812_HSVToRGB(uint16_t hue, float saturation, float value)
+colorRGB WS2812_HSVToRGB(uint16_t hue, float saturation, float value)
 {
-	color retVal = {.red = 0, .green = 0, .blue = 0};
+	colorRGB retVal = {.red = 0, .green = 0, .blue = 0};
 
 	float chroma = value * saturation;
 	float x = chroma * (1.0f - fabs(fmod(((double)hue / 60.0f), 2.0) - 1.0f));

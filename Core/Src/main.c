@@ -39,14 +39,15 @@
 //#define EXAMPLE_3
 //#define SINGLE_COMET_EFFECT
 //#define MULTI_COMET_EFFECT
-#define MANUAL_MULTI_COMET_EFFECT
+//#define MANUAL_MULTI_COMET_EFFECT
 //#define EXAMPLE_SIMPLE_METER_EFFECT
 //#define EXAMPLE_MIRRORED_METER_EFFECT
 //#define EXAMPLE_SIMPLE_GATED_STROBE
 //#define EXAMPLE_VARIABLE_GATED_STROBE
+#define EXAMPLE_SCROLL_RAINBOW
 
 // Should not be enabled if either EXAMPLE_SIMPLE_METER_EFFECT or EXAMPLE_MIRRORED_METER_EFFECT is enabled
-#define ENABLE_POTS_TO_BACKGROUND_COLOR
+//#define ENABLE_POTS_TO_BACKGROUND_COLOR
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -104,7 +105,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 //	HAL_TIM_Base_Start_IT(&htim6);
 
 #ifdef MANUAL_MULTI_COMET_EFFECT
-	color color;
+	colorRGB color;
 
 	switch(GPIO_Pin)
 	{
@@ -164,7 +165,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 	// >> 3 to scale to comfortable range
 //	WS2812_SetBackgroundColor(rawADCData[0] >> 3, rawADCData[1] >> 3, rawADCData[2] >> 3);
 
-	color rgb = WS2812_HSVToRGB((uint16_t)(((float)rawADCData[0] * 360) / 256.0f), ((float)rawADCData[1]) / 255.0f, ((float)rawADCData[2]) / 255.0f);
+	colorRGB rgb = WS2812_HSVToRGB((uint16_t)(((float)rawADCData[0] * 360) / 256.0f), ((float)rawADCData[1]) / 255.0f, ((float)rawADCData[2]) / 255.0f);
 
 	WS2812_SetBackgroundColor(rgb.red, rgb.green, rgb.blue);
 #endif
@@ -319,7 +320,7 @@ int main(void)
 	{
 		iterations = 0;
 
-		color color;
+		colorRGB color;
 		color.red = 64;
 		color.green = 64;
 		color.blue = 64;
@@ -340,7 +341,7 @@ int main(void)
 #ifdef EXAMPLE_SIMPLE_METER_EFFECT
 	WS2812_ClearLEDs();
 
-	color meterColor = {.red = 32, .green = 32, .blue = 0};
+	colorRGB meterColor = {.red = 32, .green = 32, .blue = 0};
 	WS2812_SimpleMeterEffect(meterColor, meterLevels[0], true);
 	meterColor.red = 0;
 	meterColor.green = 32;
@@ -355,7 +356,7 @@ int main(void)
 
 #ifdef EXAMPLE_MIRRORED_METER_EFFECT
 	WS2812_ClearLEDs();
-	color meterColor = {.red = 32, .green = 32, .blue = 0};
+	colorRGB meterColor = {.red = 32, .green = 32, .blue = 0};
 	WS2812_MirroredMeterEffect(meterColor, meterLevels[0], false);
 	meterColor.red = 0;
 	meterColor.green = 32;
@@ -393,6 +394,17 @@ int main(void)
 
 	WS2812_SendAll();
 #endif
+
+#ifdef EXAMPLE_SCROLL_RAINBOW
+	static colorHSV hsv = {.hue = 0, .saturation = 1.0f, .value = 0.2f};
+
+	hsv.hue = (hsv.hue < 360) ? hsv.hue + 1 : 0;
+
+	WS2812_FillRainbow(hsv, 3);
+
+	WS2812_SendAll();
+#endif
+
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t *) rawADCData, 3);
     /* USER CODE END WHILE */
 
