@@ -15,6 +15,8 @@
 #define NUM_LED_PARAMS 3
 #define NUM_MAX_COMETS 10
 
+//#define USE_OLD_SEND_FUNCTIONS
+
 #ifndef MAX
 #define MAX(x,y) (x > y) ? x : y
 #endif
@@ -50,7 +52,11 @@ void WS2812_FadeAll(uint8_t denominator);
 void WS2812_ShiftLEDs(int8_t shiftAmount);
 
 // Communication with LED strip
+#ifdef USE_OLD_SEND_FUNCTIONS
 void WS2812_SendSingleLED(uint32_t red, uint32_t green, uint32_t blue);
+#else
+uint8_t *WS2812_GetSingleLEDData(uint32_t red, uint32_t green, uint32_t blue);
+#endif
 void WS2812_SendAll(void);
 
 // Effect functions

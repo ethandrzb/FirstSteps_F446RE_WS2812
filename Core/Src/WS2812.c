@@ -111,7 +111,7 @@ void WS2812_ShiftLEDs(int8_t shiftAmount)
 		LEDData[i][2] = tmp[i][2];
 	}
 }
-
+#ifdef USE_OLD_SEND_FUNCTIONS
 // Sends the RGB color value for a single LED to the LED strip
 void WS2812_SendSingleLED(uint32_t red, uint32_t green, uint32_t blue)
 {
@@ -152,6 +152,65 @@ void WS2812_SendAll(void)
 		WS2812_SendSingleLED(LEDData[i][0], LEDData[i][1], LEDData[i][2]);
 	}
 }
+
+#else
+
+// Same as WS2812_SendSingleLED, returns the data that would be sent instead of sending it
+uint8_t *WS2812_GetSingleLEDData(uint32_t red, uint32_t green, uint32_t blue)
+{
+	uint32_t color = (green << 16) | (red << 8) | (blue);
+	static uint8_t data[24];
+	int index = 0;
+
+	// Convert color data to format expected by WS2182
+	// The SPI baud rate was set to 3x that of the LEDs so we can generate the bit timings expected by the LEDs
+	// using simple bit sequences (0b100 for 0 and 0b110 for 1)
+	for(int i = 23; i >= 0; i--)
+	{
+
+		if((color >> i) & 0x01)
+		{
+			// 2 high bits and 1 low bit
+			data[index] = 0b110;
+		}
+		else
+		{
+			// 1 high bit and 2 low bits
+			data[index] = 0b100;
+		}
+		index++;
+	}
+
+	return data;
+}
+
+void WS2812_SendAll(void)
+{
+	// TODO: Try with 1D array
+	uint8_t *data[NUM_LEDS];
+	uint8_t sendData[24 * NUM_LEDS];
+
+	// Convert to 1D array
+	for(int i = 0; i < NUM_LEDS; i++)
+	{
+		// Apply background color
+		WS2812_SetLEDAdditive(i, background.red, background.green, background.blue);
+
+		// Get data for current LED
+		data[i] = WS2812_GetSingleLEDData(LEDData[i][0], LEDData[i][1], LEDData[i][2]);
+
+		// Append to data to be sent
+		for(int j = 0; j < 24; j++)
+		{
+			sendData[i * 24 + j] = data[i][j];
+		}
+	}
+
+	// Send data to strip
+	HAL_SPI_Transmit(&LED_SPI, sendData, 24 * NUM_LEDS, 1000);
+}
+
+#endif
 
 // Initializes and deactivates all comets in buffer
 void WS2812_InitMultiCometEffect(void)
