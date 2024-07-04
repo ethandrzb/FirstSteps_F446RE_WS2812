@@ -6,18 +6,6 @@
  *      Adapted from ControllersTech's WS2812 video: https://youtu.be/71SRVEcbEwc
  */
 
-// TODO: Move comets to own layer
-// TODO: Effects to implement
-// Scrolling rainbow
-// -- Parameters: starting hue, delta hue
-// Marquis (likely implemented using MultiCometEffect)
-// -- Parameters: Number of chasing LEDs, direction, comet parameters, color, speed?
-// Single flash (gate triggered)
-// -- Implement by applying a configurable slew with separate attack and decay times to existing background control
-// Single stationary light
-// -- Parameters: Brightness attack and decay, color, size, location (random or CV)
-
-
 
 #include "main.h"
 #include <limits.h>
