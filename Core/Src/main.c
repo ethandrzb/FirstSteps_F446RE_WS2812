@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "WS2812.h"
+#include <math.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,7 +46,8 @@
 //#define EXAMPLE_SIMPLE_GATED_STROBE
 //#define EXAMPLE_VARIABLE_GATED_STROBE
 //#define EXAMPLE_SCROLL_RAINBOW
-#define EXAMPLE_MANUAL_RAINBOW
+//#define EXAMPLE_MANUAL_RAINBOW
+#define EXAMPLE_SCROLL_SATURATION
 
 // Should not be enabled if either EXAMPLE_SIMPLE_METER_EFFECT or EXAMPLE_MIRRORED_METER_EFFECT is enabled
 //#define ENABLE_POTS_TO_BACKGROUND_COLOR
@@ -419,6 +421,28 @@ int main(void)
 
 #ifdef EXAMPLE_MANUAL_RAINBOW
 	WS2812_FillRainbow(hsv, deltaHue);
+
+	WS2812_SendAll();
+#endif
+
+#ifdef EXAMPLE_SCROLL_SATURATION
+	static colorHSV hsv = {.hue = 245, .saturation = 1.0f, .value = 0.1f};
+	const float deltaStartingSaturation = 0.02;
+	const float deltaSaturation = 0.05;
+
+	static float startingPhase = 0.0f;
+
+	startingPhase = (2.0f - startingPhase < 0.001) ? 2.0f : startingPhase - deltaStartingSaturation;
+
+	// Fill each LED
+	float currentSaturation = hsv.saturation;
+	for(int i = 0; i < NUM_LEDS; i++)
+	{
+		currentSaturation = 0.5 * sin((i * deltaSaturation + startingPhase) * 3.141) + 0.5;
+
+		colorRGB rgb = WS2812_HSVToRGB(hsv.hue, currentSaturation, hsv.value);
+		WS2812_SetLED(i, rgb.red, rgb.green, rgb.blue);
+	}
 
 	WS2812_SendAll();
 #endif
