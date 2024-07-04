@@ -186,7 +186,6 @@ uint8_t *WS2812_GetSingleLEDData(uint32_t red, uint32_t green, uint32_t blue)
 
 void WS2812_SendAll(void)
 {
-	// TODO: Try with 1D array
 	uint8_t *data[NUM_LEDS];
 	uint8_t sendData[24 * NUM_LEDS];
 
@@ -207,7 +206,7 @@ void WS2812_SendAll(void)
 	}
 
 	// Send data to strip
-	HAL_SPI_Transmit(&LED_SPI, sendData, 24 * NUM_LEDS, 1000);
+	HAL_SPI_Transmit_IT(&LED_SPI, sendData, 24 * NUM_LEDS);
 }
 
 #endif

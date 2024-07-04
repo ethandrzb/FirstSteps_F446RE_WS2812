@@ -444,7 +444,11 @@ int main(void)
 		WS2812_SetLED(i, rgb.red, rgb.green, rgb.blue);
 	}
 
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+
 	WS2812_SendAll();
+
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 #endif
 
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t *) rawADCData, 3);
