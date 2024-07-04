@@ -99,7 +99,7 @@ void WS2812_ShiftLEDs(int8_t shiftAmount)
 		LEDData[i][2] = tmp[i][2];
 	}
 }
-#ifdef USE_OLD_SEND_FUNCTIONS
+#ifndef USE_NEW_SEND_FUNCTIONS
 // Sends the RGB color value for a single LED to the LED strip
 void WS2812_SendSingleLED(uint32_t red, uint32_t green, uint32_t blue)
 {
