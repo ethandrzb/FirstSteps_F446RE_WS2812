@@ -17,6 +17,8 @@
 
 #define USE_NEW_SEND_FUNCTIONS
 
+//#define WS2811_MODE
+
 #ifndef MAX
 #define MAX(x,y) (x > y) ? x : y
 #endif

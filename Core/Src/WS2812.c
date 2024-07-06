@@ -158,13 +158,24 @@ uint8_t *WS2812_GetSingleLEDData(uint32_t red, uint32_t green, uint32_t blue)
 
 		if((color >> i) & 0x01)
 		{
+			
+#ifdef WS2811_MODE
+			// 3 high bits and 3 low bits
+			data[index] = 0b111000;
+#else
 			// 2 high bits and 1 low bit
 			data[index] = 0b110;
+#endif
 		}
 		else
 		{
+#ifdef WS2811_MODE
+			// 1 high bit and 5 low bits
+			data[index] = 0b100000;
+#else
 			// 1 high bit and 2 low bits
 			data[index] = 0b100;
+#endif
 		}
 		index++;
 	}
