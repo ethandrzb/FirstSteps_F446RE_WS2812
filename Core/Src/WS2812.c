@@ -23,7 +23,7 @@ extern SPI_HandleTypeDef hspi3;
 #define LED_SPI hspi3
 
 // Sets the color of the LED at index to the specified RGB values in the LEDData buffer
-void WS2812_SetLED(uint8_t index, uint8_t red, uint8_t green, uint8_t blue)
+void WS2812_SetLED(uint16_t index, uint8_t red, uint8_t green, uint8_t blue)
 {
 	if(index >= NUM_LEDS)
 	{
@@ -183,6 +183,10 @@ uint8_t *WS2812_GetSingleLEDData(uint32_t red, uint32_t green, uint32_t blue)
 	return data;
 }
 
+// TODO: Add rate limit to ensure 50 us has passed since the last transmission
+// Use SPI transmit complete callback to start a 50 us timer
+// This timer triggers the TimePeriodElapsed callback which sets a ready flag
+// WS2812_SendAll should be modified to wait for the ready flag to be set before executing the SPI send command
 void WS2812_SendAll(void)
 {
 	uint8_t *data[NUM_LEDS];

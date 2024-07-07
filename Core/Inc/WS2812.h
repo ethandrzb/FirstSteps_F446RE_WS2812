@@ -17,6 +17,8 @@
 
 #define USE_NEW_SEND_FUNCTIONS
 
+// NOTE: WS2811 have a lower maximum frame rate than WS2812.
+// Effects that work on the WS2812 might have to be rate limited or slowed down to work on WS2811.
 //#define WS2811_MODE
 
 #ifndef MAX
@@ -46,7 +48,7 @@ typedef struct comet
 } comet;
 
 // Base LED functions
-void WS2812_SetLED(uint8_t index, uint8_t red, uint8_t green, uint8_t blue);
+void WS2812_SetLED(uint16_t index, uint8_t red, uint8_t green, uint8_t blue);
 void WS2812_SetLEDAdditive(uint8_t index, uint8_t red, uint8_t green, uint8_t blue);
 void WS2812_SetAllLEDs(uint32_t red, uint32_t green, uint32_t blue);
 void WS2812_ClearLEDs(void);
