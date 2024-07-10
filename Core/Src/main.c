@@ -266,21 +266,21 @@ int main(void)
   {
 #ifdef EXAMPLE_1
 	  // Color values can be between 0 and 255, but 255 is really bright!
-	for(int i = 0; i < NUM_LEDS; i++)
+	for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 	{
 		WS2812_SetLED(i, 8, 0, 0);
 	}
 	WS2812_SendAll();
 	HAL_Delay(1000);
 
-	for(int i = 0; i < NUM_LEDS; i++)
+	for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 	{
 		WS2812_SetLED(i, 0, 8, 0);
 	}
 	WS2812_SendAll();
 	HAL_Delay(1000);
 
-	for(int i = 0; i < NUM_LEDS; i++)
+	for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 	{
 		WS2812_SetLED(i, 0, 0, 8);
 	}
@@ -290,7 +290,7 @@ int main(void)
 #ifdef EXAMPLE_2
 	for(int i = 0; i < 128; i++)
 	{
-		for(int led = 0; led < NUM_LEDS; led++)
+		for(int led = 0; led < NUM_LOGICAL_LEDS; led++)
 		{
 			WS2812_SetLED(led, i, i, i);
 		}
@@ -299,7 +299,7 @@ int main(void)
 	}
 	for(int i = 128; i >= 0; i--)
 	{
-		for(int led = 0; led < NUM_LEDS; led++)
+		for(int led = 0; led < NUM_LOGICAL_LEDS; led++)
 		{
 			WS2812_SetLED(led, i, i, i);
 		}
@@ -312,7 +312,7 @@ int main(void)
 	WS2812_SendAll();
 
 	uint8_t shiftAmount = 1;
-	for(int j = 0; j < NUM_LEDS / shiftAmount; j++)
+	for(int j = 0; j < NUM_LOGICAL_LEDS / shiftAmount; j++)
 	{
 		if(j % 10 == 0)
 		{
@@ -436,7 +436,7 @@ int main(void)
 
 	// Fill each LED
 	float currentSaturation = hsv.saturation;
-	for(int i = 0; i < NUM_LEDS; i++)
+	for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 	{
 		currentSaturation = 0.5 * sin((i * deltaSaturation + startingPhase) * 3.141) + 0.5;
 

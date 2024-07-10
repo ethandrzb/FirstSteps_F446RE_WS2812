@@ -11,7 +11,18 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define NUM_LEDS 97
+
+// NUM_PHYSICAL_LEDS should be evenly divisible by DOWNSAMPLING_FACTOR
+// Round NUM_PHYSICAL_LEDS up to the nearest multiple, even if your strip has fewer than that amount
+#define NUM_PHYSICAL_LEDS 97
+#define DOWNSAMPLING_FACTOR 1
+
+#ifdef DOWNSAMPLING_FACTOR
+#define NUM_LOGICAL_LEDS (NUM_PHYSICAL_LEDS / DOWNSAMPLING_FACTOR)
+#else
+#define NUM_LOGICAL_LEDS NUM_PHYSICAL_LEDS
+#endif
+
 #define NUM_LED_PARAMS 3
 #define NUM_MAX_COMETS 10
 

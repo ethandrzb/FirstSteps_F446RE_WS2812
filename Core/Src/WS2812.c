@@ -12,7 +12,7 @@
 #include <math.h>
 #include "WS2812.h"
 
-uint8_t LEDData[NUM_LEDS][NUM_LED_PARAMS];
+uint8_t LEDData[NUM_LOGICAL_LEDS][NUM_LED_PARAMS];
 
 colorRGB background = {.red = 0, .blue = 0, .green = 0};
 
@@ -25,7 +25,7 @@ extern SPI_HandleTypeDef hspi3;
 // Sets the color of the LED at index to the specified RGB values in the LEDData buffer
 void WS2812_SetLED(uint16_t index, uint8_t red, uint8_t green, uint8_t blue)
 {
-	if(index >= NUM_LEDS)
+	if(index >= NUM_LOGICAL_LEDS)
 	{
 		return;
 	}
@@ -51,7 +51,7 @@ void WS2812_SetLEDAdditive(uint16_t index, uint8_t red, uint8_t green, uint8_t b
 // Sets the color of all LEDs to the specified RGB color
 void WS2812_SetAllLEDs(uint32_t red, uint32_t green, uint32_t blue)
 {
-	for(int i = 0; i < NUM_LEDS; i++)
+	for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 	{
 		WS2812_SetLED(i, red, green, blue);
 	}
@@ -60,7 +60,7 @@ void WS2812_SetAllLEDs(uint32_t red, uint32_t green, uint32_t blue)
 // Sets the color of all LEDs to black
 void WS2812_ClearLEDs(void)
 {
-	for(int i = 0; i < NUM_LEDS; i++)
+	for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 	{
 		for(int j = 0; j <= 2; j++)
 		{
@@ -72,7 +72,7 @@ void WS2812_ClearLEDs(void)
 // Fades all LEDs in LEDData by the specified denominator
 void WS2812_FadeAll(uint8_t denominator)
 {
-	for(int i = 0; i < NUM_LEDS; i++)
+	for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 	{
 		for(int j = 0; j <= 2; j++)
 		{
@@ -84,15 +84,15 @@ void WS2812_FadeAll(uint8_t denominator)
 // Moves the position the values of the LEDs by shiftAmount in LEDData
 void WS2812_ShiftLEDs(int8_t shiftAmount)
 {
-	uint8_t tmp[NUM_LEDS][NUM_LED_PARAMS];
-	for(int i = 0; i < NUM_LEDS; i++)
+	uint8_t tmp[NUM_LOGICAL_LEDS][NUM_LED_PARAMS];
+	for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 	{
-		tmp[i][0] = LEDData[(i - shiftAmount) % NUM_LEDS][0];
-		tmp[i][1] = LEDData[(i - shiftAmount) % NUM_LEDS][1];
-		tmp[i][2] = LEDData[(i - shiftAmount) % NUM_LEDS][2];
+		tmp[i][0] = LEDData[(i - shiftAmount) % NUM_LOGICAL_LEDS][0];
+		tmp[i][1] = LEDData[(i - shiftAmount) % NUM_LOGICAL_LEDS][1];
+		tmp[i][2] = LEDData[(i - shiftAmount) % NUM_LOGICAL_LEDS][2];
 	}
 
-	for(int i = 0; i < NUM_LEDS; i++)
+	for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 	{
 		LEDData[i][0] = tmp[i][0];
 		LEDData[i][1] = tmp[i][1];
@@ -132,7 +132,7 @@ void WS2812_SendSingleLED(uint32_t red, uint32_t green, uint32_t blue)
 // Sends all color values in LEDData to the LED strip
 void WS2812_SendAll(void)
 {
-	for(int i = 0; i < NUM_LEDS; i++)
+	for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 	{
 		// Apply background color
 		WS2812_SetLEDAdditive(i, background.red, background.green, background.blue);
@@ -189,11 +189,11 @@ uint8_t *WS2812_GetSingleLEDData(uint32_t red, uint32_t green, uint32_t blue)
 // WS2812_SendAll should be modified to wait for the ready flag to be set before executing the SPI send command
 void WS2812_SendAll(void)
 {
-	uint8_t *data[NUM_LEDS];
-	uint8_t sendData[24 * NUM_LEDS];
+	uint8_t *data[NUM_LOGICAL_LEDS];
+	uint8_t sendData[24 * NUM_PHYSICAL_LEDS];
 
 	// Convert to 1D array
-	for(int i = 0; i < NUM_LEDS; i++)
+	for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 	{
 		// Apply background color
 		WS2812_SetLEDAdditive(i, background.red, background.green, background.blue);
@@ -201,15 +201,18 @@ void WS2812_SendAll(void)
 		// Get data for current LED
 		data[i] = WS2812_GetSingleLEDData(LEDData[i][0], LEDData[i][1], LEDData[i][2]);
 
-		// Append to data to be sent
-		for(int j = 0; j < 24; j++)
+		for(int groupIndex = 0; groupIndex < DOWNSAMPLING_FACTOR; groupIndex++)
 		{
-			sendData[i * 24 + j] = data[i][j];
+			// Append to data to be sent
+			for(int j = 0; j < 24; j++)
+			{
+				sendData[(i * 24 * DOWNSAMPLING_FACTOR) + (groupIndex * 24) + j] = data[i][j];
+			}
 		}
 	}
 
 	// Send data to strip
-	HAL_SPI_Transmit_IT(&LED_SPI, sendData, 24 * NUM_LEDS);
+	HAL_SPI_Transmit_IT(&LED_SPI, sendData, 24 * NUM_PHYSICAL_LEDS);
 }
 
 #endif
@@ -268,7 +271,7 @@ void WS2812_MultiCometEffect(void)
 //			if(comets[i].position >= (NUM_LEDS - (comets[i].size - 1)))
 			// Deactivate comet when it reaches the end of the strip
 			// This is safe because WS2812_SetLED only sets the LED if it is in bounds
-			if(comets[i].position >= NUM_LEDS)
+			if(comets[i].position >= NUM_LOGICAL_LEDS)
 			{
 				comets[i].active = false;
 			}
@@ -298,7 +301,7 @@ void WS2812_CometEffect(void)
 	position += direction;
 
 	// Flip direction when we hit the ends of the strip
-	if(position == (NUM_LEDS - cometSize) || (position == 0))
+	if(position == (NUM_LOGICAL_LEDS - cometSize) || (position == 0))
 	{
 		direction *= -1;
 	}
@@ -320,7 +323,7 @@ void WS2812_CometEffect(void)
 void WS2812_SimpleMeterEffect(colorRGB color, uint8_t level, bool flip)
 {
 	// Clip level
-	level = (level <= NUM_LEDS) ? level : NUM_LEDS;
+	level = (level <= NUM_LOGICAL_LEDS) ? level : NUM_LOGICAL_LEDS;
 
 	// Fill low index to high index
 	if(flip)
@@ -332,7 +335,7 @@ void WS2812_SimpleMeterEffect(colorRGB color, uint8_t level, bool flip)
 		}
 
 		// Unfilled portion
-		for(int i = level; i < NUM_LEDS; i++)
+		for(int i = level; i < NUM_LOGICAL_LEDS; i++)
 		{
 			WS2812_SetLEDAdditive(i, 0, 0, 0);
 		}
@@ -341,7 +344,7 @@ void WS2812_SimpleMeterEffect(colorRGB color, uint8_t level, bool flip)
 	else
 	{
 		// Reverse fill amount to preserve higher level ==> more LEDs filled
-		level = NUM_LEDS - level;
+		level = NUM_LOGICAL_LEDS - level;
 
 		// Unfilled portion
 		for(int i = 0; i < level; i++)
@@ -350,7 +353,7 @@ void WS2812_SimpleMeterEffect(colorRGB color, uint8_t level, bool flip)
 		}
 
 		// Filled portion
-		for(int i = level; i < NUM_LEDS; i++)
+		for(int i = level; i < NUM_LOGICAL_LEDS; i++)
 		{
 			WS2812_SetLEDAdditive(i, color.red, color.green, color.blue);
 		}
@@ -368,20 +371,20 @@ void WS2812_MirroredMeterEffect(colorRGB color, uint8_t level, bool centered)
 	level >>= 1;
 
 	// Clip level
-	level = (level <= NUM_LEDS >> 1) ? level : NUM_LEDS >> 1;
+	level = (level <= NUM_LOGICAL_LEDS >> 1) ? level : NUM_LOGICAL_LEDS >> 1;
 
 	if(centered)
 	{
-		for(int i = 0; i < NUM_LEDS; i++)
+		for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 		{
 			// Split strip into 3 zones and fill accordingly
 			// Zone 1: Unfilled [0, (NUM_LEDS >> 1) - level)
-			if(i < (NUM_LEDS >> 1) - level)
+			if(i < (NUM_LOGICAL_LEDS >> 1) - level)
 			{
 				WS2812_SetLEDAdditive(i, 0, 0, 0);
 			}
 			// Zone 2: Filled [(NUM_LEDS >> 1) - level, (NUM_LEDS >> 1) + level]
-			else if(i < (NUM_LEDS >> 1) + level)
+			else if(i < (NUM_LOGICAL_LEDS >> 1) + level)
 			{
 				WS2812_SetLEDAdditive(i, color.red, color.green, color.blue);
 			}
@@ -395,18 +398,18 @@ void WS2812_MirroredMeterEffect(colorRGB color, uint8_t level, bool centered)
 	else
 	{
 		// Reverse fill amount to preserve higher level ==> more LEDs filled
-		level = (NUM_LEDS >> 1) - level;
+		level = (NUM_LOGICAL_LEDS >> 1) - level;
 
-		for(int i = 0; i < NUM_LEDS; i++)
+		for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 		{
 			// Split strip into 3 zones and fill accordingly
 			// Zone 1: Filled [0, (NUM_LEDS >> 1) - level)
-			if(i < (NUM_LEDS >> 1) - level)
+			if(i < (NUM_LOGICAL_LEDS >> 1) - level)
 			{
 				WS2812_SetLEDAdditive(i, color.red, color.green, color.blue);
 			}
 			// Zone 2: Unfilled [(NUM_LEDS >> 1) - level, (NUM_LEDS >> 1) + level]
-			else if(i < (NUM_LEDS >> 1) + level)
+			else if(i < (NUM_LOGICAL_LEDS >> 1) + level)
 			{
 				WS2812_SetLEDAdditive(i, 0, 0, 0);
 			}
@@ -431,7 +434,7 @@ void WS2812_FillRainbow(colorHSV startingColor, int8_t deltaHue)
 
 	if(fillForward)
 	{
-		for(int i = 0; i < NUM_LEDS; i++)
+		for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 		{
 			colorRGB rgb = WS2812_HSVToRGB(startingColor.hue, startingColor.saturation, startingColor.value);
 
@@ -447,7 +450,7 @@ void WS2812_FillRainbow(colorHSV startingColor, int8_t deltaHue)
 	}
 	else
 	{
-		for(int i = NUM_LEDS - 1; i >= 0; i--)
+		for(int i = NUM_LOGICAL_LEDS - 1; i >= 0; i--)
 		{
 			colorRGB rgb = WS2812_HSVToRGB(startingColor.hue, startingColor.saturation, startingColor.value);
 
