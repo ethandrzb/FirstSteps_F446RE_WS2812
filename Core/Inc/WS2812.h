@@ -32,6 +32,10 @@
 // Effects that work on the WS2812 might have to be rate limited or slowed down to work on WS2811.
 //#define WS2811_MODE
 
+// Calculate and send FPS over USART2
+// WARNING: Enabling this feature is known to cause flickering each time the value is calculated
+//#define ENABLE_FPS_COUNTER
+
 #ifndef MAX
 #define MAX(x,y) (x > y) ? x : y
 #endif

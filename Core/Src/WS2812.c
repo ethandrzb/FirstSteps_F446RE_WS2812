@@ -22,6 +22,8 @@ comet comets[NUM_MAX_COMETS];
 extern SPI_HandleTypeDef hspi3;
 #define LED_SPI hspi3
 
+extern volatile uint16_t WS2812FramesSent;
+
 // Sets the color of the LED at index to the specified RGB values in the LEDData buffer
 void WS2812_SetLED(uint16_t index, uint8_t red, uint8_t green, uint8_t blue)
 {
@@ -211,8 +213,11 @@ void WS2812_SendAll(void)
 		}
 	}
 
+	WS2812FramesSent++;
+
 	// Send data to strip
 	HAL_SPI_Transmit_IT(&LED_SPI, sendData, 24 * NUM_PHYSICAL_LEDS);
+//	HAL_SPI_Transmit(&LED_SPI, sendData, 24 * NUM_PHYSICAL_LEDS, 1000);
 }
 
 #endif
