@@ -18,7 +18,7 @@
       5. Clock phase (CPHA): 1 Edge
    3. NVIC settings
       1. **SPI global interrupt: Enabled**
-4. Change `NUM_LEDS` in `Core/Inc/WS2812.h` to the number of LEDs in your LED strip or daisy chain
+4. Change the value of the `NUM_PHYSICAL_LEDS` macro in `Core/Inc/WS2812.h` to the number of LEDs in your LED strip or daisy chain
 5. Change the handle of the SPI interface referenced at the top of `Core/Src/WS2812.c` to the one you configured in STM32CubeMX in Step 3. By default, the library is configured to use **SPI3**.
 
 ```
@@ -32,7 +32,7 @@ extern SPI_HandleTypeDef hspi3;
 
 1. Clone the repo
 2. Import the repo folder in STM32CubeIDE. It should recognize the project inside.
-3. Change `NUM_LEDS` in `Core/Inc/WS2812.h` to the number of LEDs in your LED strip or daisy chain
+3. Change the value of the `NUM_PHYSICAL_LEDS` macro in `Core/Inc/WS2812.h` to the number of LEDs in your LED strip or daisy chain
 4. Uncomment `#define EXAMPLE_1` in `Core/Src/main.c`
 5. Compile and upload the code to your STM32F446RE
 6. Happy coding!
