@@ -43,4 +43,5 @@ Project was built using an STM32F446RE Nucleo board using included hardware abst
 
 ## Credits
 
-Adapted from ControllersTech's WS2812 SPI video: https://youtu.be/71SRVEcbEwc
+- Adapted from ControllersTech's [WS2812 SPI video](https://youtu.be/71SRVEcbEwc)
+- Comet effect based on [this tutorial](https://www.youtube.com/watch?v=yM5dY7K2KHM) from Dave's Garage
