@@ -7,15 +7,20 @@
 1. Copy `Core/Inc/WS2812.h` to `Core/Inc/` in your project
 2. Copy `Core/Src/WS2812.c` to `Core/Src/` in your project
 3. Use STM32CubeMX to configure an SPI interface on your MCU to control the LEDS.
-   **1. Connect SPI MOSI to DIN (data in) on your LED strip**
+   1. Connect LED strip to your MCU and an appropriate power supply
+      1. Data: **PB0** (SPI3 MOSI) ==> DIN (data in) on your LED strip
+      2. Power
+         1. **MCU and LED strip MUST share a common ground**
+         2. WS2812 ==> 5V
+         3. WS2811 ==> 12V
    2. Parameter settings
       1. **Mode: Half-duplex master**
       2. Data size: 8 bits
       3. First bit: MSB first
-      **5. Baud rate: 2.5 MBits/sec**
+      4. **Baud rate: 2.5 MBits/sec**
            1. **NOTE:** WS2812 LEDs require precise bit timings to work with the SPI interface. **The baud rate of your SPI interface MUST match the specified baud rate for the library to work.**
-      4. Clock polarity (CPOL): Low
-      5. Clock phase (CPHA): 1 Edge
+      5. Clock polarity (CPOL): Low
+      6. Clock phase (CPHA): 1 Edge
    3. NVIC settings
       1. **SPI global interrupt: Enabled**
 4. Change the value of the `NUM_PHYSICAL_LEDS` macro in `Core/Inc/WS2812.h` to the number of LEDs in your LED strip or daisy chain
@@ -30,19 +35,18 @@ extern SPI_HandleTypeDef hspi3;
 
 ### Using the included example project for the STM32F446RE
 
-**1. Connect LED strip to your MCU and an appropriate power supply**
-   1. Data
-      1. PB0 (SPI3 MOSI) ==> DIN (data in)
-   2. Power
-      **1. MCU and LED strip MUST share a common ground**
+1. Connect LED strip to your MCU and an appropriate power supply
+   1. Data: **PB0** (SPI3 MOSI) ==> DIN (data in) on your LED strip
+   1. Power
+      1. **MCU and LED strip MUST share a common ground**
       2. WS2812 ==> 5V
       3. WS2811 ==> 12V
-2. Clone the repo
-3. Import the repo folder in STM32CubeIDE. It should recognize the project inside.
-4. Change the value of the `NUM_PHYSICAL_LEDS` macro in `Core/Inc/WS2812.h` to the number of LEDs in your LED strip or daisy chain
-5. Uncomment `#define EXAMPLE_1` in `Core/Src/main.c`
-6. Compile and upload the code to your STM32F446RE
-7. Happy coding!
+1. Clone the repo
+2. Import the repo folder in STM32CubeIDE. It should recognize the project inside.
+3. Change the value of the `NUM_PHYSICAL_LEDS` macro in `Core/Inc/WS2812.h` to the number of LEDs in your LED strip or daisy chain
+4. Uncomment `#define EXAMPLE_1` in `Core/Src/main.c`
+5. Compile and upload the code to your STM32F446RE
+6. Happy coding!
 
 ## Compatibility
 
