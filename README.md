@@ -30,12 +30,19 @@ extern SPI_HandleTypeDef hspi3;
 
 ### Using the included example project for the STM32F446RE
 
-1. Clone the repo
-2. Import the repo folder in STM32CubeIDE. It should recognize the project inside.
-3. Change the value of the `NUM_PHYSICAL_LEDS` macro in `Core/Inc/WS2812.h` to the number of LEDs in your LED strip or daisy chain
-4. Uncomment `#define EXAMPLE_1` in `Core/Src/main.c`
-5. Compile and upload the code to your STM32F446RE
-6. Happy coding!
+**1. Connect LED strip to your MCU and an appropriate power supply**
+   1. Data
+      1. PB0 (SPI3 MOSI) ==> DIN (data in)
+   2. Power
+      **1. MCU and LED strip MUST share a common ground**
+      2. WS2812 ==> 5V
+      3. WS2811 ==> 12V
+2. Clone the repo
+3. Import the repo folder in STM32CubeIDE. It should recognize the project inside.
+4. Change the value of the `NUM_PHYSICAL_LEDS` macro in `Core/Inc/WS2812.h` to the number of LEDs in your LED strip or daisy chain
+5. Uncomment `#define EXAMPLE_1` in `Core/Src/main.c`
+6. Compile and upload the code to your STM32F446RE
+7. Happy coding!
 
 ## Compatibility
 
