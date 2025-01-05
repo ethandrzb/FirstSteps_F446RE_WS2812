@@ -222,6 +222,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 #endif
 }
 
+#ifdef ENABLE_FPS_COUNTER
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	// FPS timer
@@ -236,6 +237,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		WS2812FramesSent = 0;
 	}
 }
+#endif
 
 /* USER CODE END 0 */
 
