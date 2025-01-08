@@ -36,18 +36,18 @@
 
 // NOTE: It is not recommended to enable more than one example
 
-//#define EXAMPLE_1
-//#define EXAMPLE_2
-//#define EXAMPLE_3
-//#define SINGLE_COMET_EFFECT
-//#define MULTI_COMET_EFFECT
-//#define MANUAL_MULTI_COMET_EFFECT
-//#define EXAMPLE_SIMPLE_METER_EFFECT
-//#define EXAMPLE_MIRRORED_METER_EFFECT
-//#define EXAMPLE_SIMPLE_GATED_STROBE
-//#define EXAMPLE_VARIABLE_GATED_STROBE
-//#define EXAMPLE_SCROLL_RAINBOW
-//#define EXAMPLE_MANUAL_RAINBOW
+// #define EXAMPLE_1
+// #define EXAMPLE_2
+// #define EXAMPLE_3
+// #define SINGLE_COMET_EFFECT
+// #define MULTI_COMET_EFFECT
+// #define MANUAL_MULTI_COMET_EFFECT
+// #define EXAMPLE_SIMPLE_METER_EFFECT
+// #define EXAMPLE_MIRRORED_METER_EFFECT
+// #define EXAMPLE_SIMPLE_GATED_STROBE
+// #define EXAMPLE_VARIABLE_GATED_STROBE
+// #define EXAMPLE_SCROLL_RAINBOW
+// #define EXAMPLE_MANUAL_RAINBOW
 #define EXAMPLE_SCROLL_SATURATION
 
 // Should not be enabled if either EXAMPLE_SIMPLE_METER_EFFECT or EXAMPLE_MIRRORED_METER_EFFECT is enabled
@@ -300,21 +300,21 @@ int main(void)
 	  // Color values can be between 0 and 255, but 255 is really bright!
 	for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 	{
-		WS2812_SetLED(i, 8, 0, 0);
+		WS2812_SetLED(i, 8, 0, 0, false);
 	}
 	WS2812_SendAll();
 	HAL_Delay(1000);
 
 	for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 	{
-		WS2812_SetLED(i, 0, 8, 0);
+		WS2812_SetLED(i, 0, 8, 0, false);
 	}
 	WS2812_SendAll();
 	HAL_Delay(1000);
 
 	for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
 	{
-		WS2812_SetLED(i, 0, 0, 8);
+		WS2812_SetLED(i, 0, 0, 8, false);
 	}
 	WS2812_SendAll();
 	HAL_Delay(1000);
@@ -324,7 +324,7 @@ int main(void)
 	{
 		for(int led = 0; led < NUM_LOGICAL_LEDS; led++)
 		{
-			WS2812_SetLED(led, i, i, i);
+			WS2812_SetLED(led, i, i, i, false);
 		}
 		WS2812_SendAll();
 		HAL_Delay(10);
@@ -333,14 +333,14 @@ int main(void)
 	{
 		for(int led = 0; led < NUM_LOGICAL_LEDS; led++)
 		{
-			WS2812_SetLED(led, i, i, i);
+			WS2812_SetLED(led, i, i, i, false);
 		}
 		WS2812_SendAll();
 		HAL_Delay(10);
 	}
 #endif
 #ifdef EXAMPLE_3
-	WS2812_SetLED(0, 64, 64, 64);
+	WS2812_SetLED(0, 64, 64, 64, false);
 	WS2812_SendAll();
 
 	uint8_t shiftAmount = 1;
@@ -348,7 +348,7 @@ int main(void)
 	{
 		if(j % 10 == 0)
 		{
-			WS2812_SetLED(0, 64, 64, 64);
+			WS2812_SetLED(0, 64, 64, 64, false);
 		}
 
 		WS2812_ShiftLEDs(shiftAmount);
@@ -473,7 +473,7 @@ int main(void)
 		currentSaturation = 0.5 * sin((i * deltaSaturation + startingPhase) * 3.141) + 0.5;
 
 		colorRGB rgb = WS2812_HSVToRGB(hsv.hue, currentSaturation, hsv.value);
-		WS2812_SetLED(i, rgb.red, rgb.green, rgb.blue);
+		WS2812_SetLED(i, rgb.red, rgb.green, rgb.blue, false);
 	}
 
 	WS2812_SendAll();
