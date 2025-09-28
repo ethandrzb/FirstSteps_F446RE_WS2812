@@ -12,11 +12,14 @@
 #include <math.h>
 #include "WS2812.h"
 
-uint8_t LEDData[NUM_LOGICAL_LEDS][NUM_LED_PARAMS];
+uint8_t LEDData[MAX_NUM_PHYSICAL_LEDS][NUM_LED_PARAMS];
 
 colorRGB background = {.red = 0, .blue = 0, .green = 0};
 
 comet comets[NUM_MAX_COMETS];
+
+uint16_t NUM_PHYSICAL_LEDS = 97;
+uint16_t DOWNSAMPLING_FACTOR = 1;
 
 // Change to SPI handle connected to LEDs
 extern SPI_HandleTypeDef hspi3;
@@ -89,7 +92,7 @@ void WS2812_FadeAll(uint8_t denominator)
 }
 
 // Moves the position the values of the LEDs by shiftAmount in LEDData
-void WS2812_ShiftLEDs(int8_t shiftAmount)
+void WS2812_ShiftLEDs(int16_t shiftAmount)
 {
 	uint8_t tmp[NUM_LOGICAL_LEDS][NUM_LED_PARAMS];
 	for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
@@ -150,7 +153,8 @@ void WS2812_SendAll(void)
 
 #else
 
-// Same as WS2812_SendSingleLED, returns the data that would be sent instead of sending it
+#ifndef USE_LUT_OPTIMIZATION
+// Same as WS2812_SendSingleLED, but returns the data that would be sent instead of sending it
 uint8_t *WS2812_GetSingleLEDData(uint32_t red, uint32_t green, uint32_t blue)
 {
 	uint32_t color = (green << 16) | (red << 8) | (blue);
@@ -165,7 +169,7 @@ uint8_t *WS2812_GetSingleLEDData(uint32_t red, uint32_t green, uint32_t blue)
 
 		if((color >> i) & 0x01)
 		{
-			
+
 #ifdef WS2811_MODE
 			// 3 high bits and 3 low bits
 			data[index] = 0b111000;
@@ -189,18 +193,39 @@ uint8_t *WS2812_GetSingleLEDData(uint32_t red, uint32_t green, uint32_t blue)
 
 	return data;
 }
+#else
+// Same as fast version of WS2812_GetSingleLEDData, but uses lookup table to process entire bytes of the color at a time instead of going bit by bit
+uint8_t *WS2812_GetSingleLEDData(uint32_t red, uint32_t green, uint32_t blue)
+{
+	uint32_t color = (green << 16) | (red << 8) | (blue);
+	static uint8_t data[24];
 
-// TODO: Add rate limit to ensure 50 us has passed since the last transmission
-// Use SPI transmit complete callback to start a 50 us timer
-// This timer triggers the TimePeriodElapsed callback which sets a ready flag
-// WS2812_SendAll should be modified to wait for the ready flag to be set before executing the SPI send command
+	// For each byte in color
+	for(int i = 16; i >= 0; i -= 8)
+	{
+		// Copy LUT entry to data
+		memcpy(data + (16 - i), byteToWS2812DataLUT[(color >> i) & 0xFF], 8 * sizeof(uint8_t));
+	}
+
+	return data;
+}
+#endif
+
 void WS2812_SendAll(void)
 {
-	uint8_t *data[NUM_LOGICAL_LEDS];
-	uint8_t sendData[24 * NUM_PHYSICAL_LEDS];
+	// Sample NUM_LOGICAL_LEDS and NUM_PHYSICAL_LEDS in case they change while this function is running
+	const uint16_t _DOWNSAMPLING_FACTOR = DOWNSAMPLING_FACTOR;
+	const uint16_t _NUM_PHYSICAL_LEDS = NUM_PHYSICAL_LEDS;
+
+	// Pad _NUM_PHYSICAL_LEDS to be divisible by downsampling factor
+	const uint16_t _NUM_PHYSICAL_LEDS_PADDED = _NUM_PHYSICAL_LEDS + (_DOWNSAMPLING_FACTOR - (_NUM_PHYSICAL_LEDS % _DOWNSAMPLING_FACTOR));
+	const uint16_t _NUM_LOGICAL_LEDS_PADDED = _NUM_PHYSICAL_LEDS_PADDED / _DOWNSAMPLING_FACTOR;
+
+	uint8_t *data[_NUM_LOGICAL_LEDS_PADDED];
+	uint8_t sendData[24 * _NUM_PHYSICAL_LEDS_PADDED];
 
 	// Convert to 1D array
-	for(int i = 0; i < NUM_LOGICAL_LEDS; i++)
+	for(int i = 0; i < _NUM_LOGICAL_LEDS_PADDED; i++)
 	{
 		// Apply background color
 		WS2812_SetLEDAdditive(i, background.red, background.green, background.blue);
@@ -208,12 +233,17 @@ void WS2812_SendAll(void)
 		// Get data for current LED
 		data[i] = WS2812_GetSingleLEDData(LEDData[i][0], LEDData[i][1], LEDData[i][2]);
 
-		for(int groupIndex = 0; groupIndex < DOWNSAMPLING_FACTOR; groupIndex++)
+		for(int groupIndex = 0; groupIndex < _DOWNSAMPLING_FACTOR; groupIndex++)
 		{
 			// Append to data to be sent
 			for(int j = 0; j < 24; j++)
 			{
-				sendData[(i * 24 * DOWNSAMPLING_FACTOR) + (groupIndex * 24) + j] = data[i][j];
+				// Data and instruction synchronization barriers
+				// Ensures correct memory access when code is optimized
+				__DSB();
+				__ISB();
+
+				sendData[(i * 24 * _DOWNSAMPLING_FACTOR) + (groupIndex * 24) + j] = data[i][j];
 			}
 		}
 	}
@@ -223,7 +253,7 @@ void WS2812_SendAll(void)
 #endif
 
 	// Send data to strip
-	HAL_SPI_Transmit_DMA(&hspi3, sendData, 24 * NUM_PHYSICAL_LEDS);
+	HAL_SPI_Transmit_DMA(&hspi3, sendData, 24 * _NUM_PHYSICAL_LEDS_PADDED);
 }
 
 #endif
@@ -331,7 +361,7 @@ void WS2812_CometEffect(void)
 // color: Color of filled LEDs
 // level: Number of LEDs to fill
 // flip: Changes fill direction
-void WS2812_SimpleMeterEffect(colorRGB color, uint8_t level, bool flip)
+void WS2812_SimpleMeterEffect(colorRGB color, uint16_t level, bool flip)
 {
 	// Clip level
 	level = (level <= NUM_LOGICAL_LEDS) ? level : NUM_LOGICAL_LEDS;
@@ -376,7 +406,7 @@ void WS2812_SimpleMeterEffect(colorRGB color, uint8_t level, bool flip)
 // level: Number of LEDs to fill
 // centered: If true, the meters are drawn from the middle LED in the strip towards the ends.
 	// Otherwise, the meters are drawn from each end towards the center of the strip
-void WS2812_MirroredMeterEffect(colorRGB color, uint8_t level, bool centered)
+void WS2812_MirroredMeterEffect(colorRGB color, uint16_t level, bool centered)
 {
 	// Half input level to account for the fact that two LEDs are filled for every increase in level
 	level >>= 1;
@@ -433,7 +463,7 @@ void WS2812_MirroredMeterEffect(colorRGB color, uint8_t level, bool centered)
 	}
 }
 
-void WS2812_FillRainbow(colorHSV startingColor, int8_t deltaHue)
+void WS2812_FillRainbow(colorHSV startingColor, int16_t deltaHue)
 {
 	bool fillForward = true;
 
@@ -484,6 +514,15 @@ void WS2812_SetBackgroundColor(uint8_t red, uint8_t green, uint8_t blue)
 	background.red = red;
 	background.green = green;
 	background.blue = blue;
+}
+
+void WS2812_SetBackgroundColorHSV(colorHSV *hsv)
+{
+	colorRGB tmp = WS2812_HSVToRGB(hsv->hue, hsv->saturation, hsv->value);
+
+	background.red = tmp.red;
+	background.green = tmp.green;
+	background.blue = tmp.blue;
 }
 
 
