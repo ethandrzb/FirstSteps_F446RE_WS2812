@@ -377,7 +377,7 @@ int main(void)
 	WS2812_SendAll();
 	iterations++;
 
-//	HAL_Delay(50);
+//	HAL_Delay(16);
 #endif
 #ifdef MANUAL_MULTI_COMET_EFFECT
 	WS2812_MultiCometEffect();
