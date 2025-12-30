@@ -132,28 +132,28 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			color.green = 0;
 			color.blue = 0;
 
-			WS2812_AddComet(color, 2);
+			WS2812_AddComet(color, 2, 1, true);
 			break;
 		case BTN2_Pin:
 			color.red = 0;
 			color.green = 96;
 			color.blue = 0;
 
-			WS2812_AddComet(color, 2);
+			WS2812_AddComet(color, 2, 1, true);
 			break;
 		case BTN3_Pin:
 			color.red = 0;
 			color.green = 0;
 			color.blue = 96;
 
-			WS2812_AddComet(color, 2);
+			WS2812_AddComet(color, 2, 1, true);
 			break;
 		case BTN4_Pin:
 			color.red = 96;
 			color.green = 96;
 			color.blue = 96;
 
-			WS2812_AddComet(color, 2);
+			WS2812_AddComet(color, 2, 1, true);
 			break;
 	}
 #endif
@@ -222,7 +222,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 #endif
 }
 
-#ifdef ENABLE_FPS_COUNTER
+#ifdef ENABLE_PERFORMANCE_MONITOR
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	// FPS timer
@@ -286,7 +286,7 @@ int main(void)
   WS2812_InitMultiCometEffect();
 #endif
 
-#ifdef ENABLE_FPS_COUNTER
+#ifdef ENABLE_PERFORMANCE_MONITOR
   HAL_TIM_Base_Start_IT(&htim3);
 #endif
 
@@ -371,13 +371,13 @@ int main(void)
 		color.green = 64;
 		color.blue = 64;
 
-		WS2812_AddComet(color, 2);
+		WS2812_AddComet(color, 2, 1, true);
 	}
 	WS2812_MultiCometEffect();
 	WS2812_SendAll();
 	iterations++;
 
-//	HAL_Delay(16);
+	HAL_Delay(16);
 #endif
 #ifdef MANUAL_MULTI_COMET_EFFECT
 	WS2812_MultiCometEffect();

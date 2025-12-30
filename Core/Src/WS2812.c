@@ -20,12 +20,13 @@ comet comets[NUM_MAX_COMETS];
 
 uint16_t NUM_PHYSICAL_LEDS = 97;
 uint16_t DOWNSAMPLING_FACTOR = 1;
+uint16_t FRACTAL_FACTOR = 1;
 
 // Change to SPI handle connected to LEDs
 extern SPI_HandleTypeDef hspi3;
 #define LED_SPI hspi3
 
-#ifdef ENABLE_FPS_COUNTER
+#ifdef ENABLE_PERFORMANCE_MONITOR
 extern volatile uint16_t WS2812FramesSent;
 #endif
 
@@ -213,13 +214,16 @@ uint8_t *WS2812_GetSingleLEDData(uint32_t red, uint32_t green, uint32_t blue)
 
 void WS2812_SendAll(void)
 {
-	// Sample NUM_LOGICAL_LEDS and NUM_PHYSICAL_LEDS in case they change while this function is running
-	const uint16_t _DOWNSAMPLING_FACTOR = DOWNSAMPLING_FACTOR;
+	// Sample DOWNSAMPLING_FACTOR and NUM_PHYSICAL_LEDS in case they change while this function is running
 	const uint16_t _NUM_PHYSICAL_LEDS = NUM_PHYSICAL_LEDS;
+	const uint16_t _DOWNSAMPLING_FACTOR = DOWNSAMPLING_FACTOR;
+	const uint16_t _FRACTAL_FACTOR = FRACTAL_FACTOR;
 
 	// Pad _NUM_PHYSICAL_LEDS to be divisible by downsampling factor
 	const uint16_t _NUM_PHYSICAL_LEDS_PADDED = _NUM_PHYSICAL_LEDS + (_DOWNSAMPLING_FACTOR - (_NUM_PHYSICAL_LEDS % _DOWNSAMPLING_FACTOR));
 	const uint16_t _NUM_LOGICAL_LEDS_PADDED = _NUM_PHYSICAL_LEDS_PADDED / _DOWNSAMPLING_FACTOR;
+
+	const uint16_t _FRACTAL_GROUP_SIZE = _NUM_LOGICAL_LEDS_PADDED / _FRACTAL_FACTOR;
 
 	uint8_t *data[_NUM_LOGICAL_LEDS_PADDED];
 	uint8_t sendData[24 * _NUM_PHYSICAL_LEDS_PADDED];
@@ -231,29 +235,35 @@ void WS2812_SendAll(void)
 		WS2812_SetLEDAdditive(i, background.red, background.green, background.blue);
 
 		// Get data for current LED
-		data[i] = WS2812_GetSingleLEDData(LEDData[i][0], LEDData[i][1], LEDData[i][2]);
+		if(_FRACTAL_GROUP_SIZE <= 1)
+		{
+			// Fractal effect disabled
+			data[i] = WS2812_GetSingleLEDData(LEDData[i][0], LEDData[i][1], LEDData[i][2]);
+		}
+		else
+		{
+			// Fractal effect enabled
+			//TODO: Figure out why fractal doesn't line up with the end of the strip correctly
+			uint16_t LEDIndex = (i % _FRACTAL_GROUP_SIZE) * _FRACTAL_FACTOR;
+			data[i] = WS2812_GetSingleLEDData(LEDData[LEDIndex][0], LEDData[LEDIndex][1], LEDData[LEDIndex][2]);
+		}
 
 		for(int groupIndex = 0; groupIndex < _DOWNSAMPLING_FACTOR; groupIndex++)
 		{
 			// Append to data to be sent
 			for(int j = 0; j < 24; j++)
 			{
-				// Data and instruction synchronization barriers
-				// Ensures correct memory access when code is optimized
-				__DSB();
-				__ISB();
-
 				sendData[(i * 24 * _DOWNSAMPLING_FACTOR) + (groupIndex * 24) + j] = data[i][j];
 			}
 		}
 	}
 
-#ifdef ENABLE_FPS_COUNTER
+#ifdef ENABLE_PERFORMANCE_MONITOR
 	WS2812FramesSent++;
 #endif
 
 	// Send data to strip
-	HAL_SPI_Transmit_DMA(&hspi3, sendData, 24 * _NUM_PHYSICAL_LEDS_PADDED);
+	HAL_SPI_Transmit_DMA(&LED_SPI, sendData, 24 * _NUM_PHYSICAL_LEDS_PADDED);
 }
 
 #endif
@@ -268,6 +278,8 @@ void WS2812_InitMultiCometEffect(void)
 		comets[i].color.green = 0;
 		comets[i].color.blue = 0;
 		comets[i].size = 0;
+		comets[i].speed = 1;
+		comets[i].forward = true;
 		comets[i].active = false;
 	}
 }
@@ -275,7 +287,7 @@ void WS2812_InitMultiCometEffect(void)
 // Adds a comet to be processed by WS2812_MultiCometEffect
 // color: Color of comet
 // size: number of pixels used for body of comet
-void WS2812_AddComet(colorRGB color, uint8_t size)
+void WS2812_AddComet(colorRGB color, uint8_t size, uint8_t speed, bool forward)
 {
 	uint16_t index = 0;
 
@@ -290,9 +302,12 @@ void WS2812_AddComet(colorRGB color, uint8_t size)
 		return;
 	}
 
-	comets[index].position = 0;
+	comets[index].position = forward ? 0 : NUM_LOGICAL_LEDS;
 	comets[index].color = color;
 	comets[index].size = size;
+	comets[index].speed = speed;
+	comets[index].ticksElapsed = 0;
+	comets[index].forward = forward;
 	comets[index].active = true;
 }
 
@@ -307,12 +322,12 @@ void WS2812_MultiCometEffect(void)
 	{
 		if(comets[i].active)
 		{
-			// Deactivate comets when head reaches the end of the LED strip
+			// Deactivate comets when head reaches one end of the LED strip
 			// -1 accounts for the fact that comets are drawn from [position, position + size], NOT [position + 1, position + 1 + size]
 //			if(comets[i].position >= (NUM_LEDS - (comets[i].size - 1)))
 			// Deactivate comet when it reaches the end of the strip
 			// This is safe because WS2812_SetLED only sets the LED if it is in bounds
-			if(comets[i].position >= NUM_LOGICAL_LEDS)
+			if(((comets[i].forward) && (comets[i].position >= NUM_LOGICAL_LEDS)) || ((!comets[i].forward) && (comets[i].position <= 0)))
 			{
 				comets[i].active = false;
 			}
@@ -321,10 +336,17 @@ void WS2812_MultiCometEffect(void)
 				// Draw comet
 				for(int j = 0; j < comets[i].size; j++)
 				{
-					WS2812_SetLED(j + comets[i].position, comets[i].color.red, comets[i].color.green, comets[i].color.blue, false);
+					WS2812_SetLED(j + comets[i].position, comets[i].color.red, comets[i].color.green, comets[i].color.blue, true);
 				}
 
-				comets[i].position++;
+				// Advanced comet position after specified number of frames have elapsed
+				if(comets[i].ticksElapsed % comets[i].speed == 0)
+				{
+					comets[i].position += (comets[i].forward) ? 1 : -1;
+				}
+
+				// Increment number of frames this comet has lived and wrap around by speed
+				comets[i].ticksElapsed = (comets[i].ticksElapsed >= comets[i].speed) ? 0 : comets[i].ticksElapsed + 1;
 			}
 		}
 	}
@@ -533,6 +555,17 @@ void WS2812_SetBackgroundColorHSV(colorHSV *hsv)
 colorRGB WS2812_HSVToRGB(uint16_t hue, float saturation, float value)
 {
 	colorRGB retVal = {.red = 0, .green = 0, .blue = 0};
+
+	// Wrap extreme hue values around
+	// Change to modulus if argument is not clipped (e.g., by NumericEffectParameter's ModulationMapper)
+	if(hue >= 360)
+	{
+		hue -= 360;
+	}
+
+	// Clip max saturation and value
+	saturation = MIN(MAX(saturation, 0.0f), 1.0f);
+	value = MIN(MAX(value, 0.0f), 1.0f);
 
 	float chroma = value * saturation;
 	float x = chroma * (1.0f - fabs(fmod(((double)hue / 60.0f), 2.0) - 1.0f));

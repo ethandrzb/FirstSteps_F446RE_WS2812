@@ -26,10 +26,16 @@ extern uint16_t NUM_PHYSICAL_LEDS;
 //TODO: Change to power of 2 and bit shift in sendAll?
 extern uint16_t DOWNSAMPLING_FACTOR;
 
+extern uint16_t FRACTAL_FACTOR;
+
+//#ifdef DOWNSAMPLING_FACTOR
 #define NUM_LOGICAL_LEDS (NUM_PHYSICAL_LEDS / DOWNSAMPLING_FACTOR)
+//#else
+//#define NUM_LOGICAL_LEDS NUM_PHYSICAL_LEDS
+//#endif
 
 #define NUM_LED_PARAMS 3
-#define NUM_MAX_COMETS 10
+#define NUM_MAX_COMETS 30
 
 #define USE_NEW_SEND_FUNCTIONS
 
@@ -43,12 +49,16 @@ extern uint16_t DOWNSAMPLING_FACTOR;
 // Effects that work on the WS2812 might have to be rate limited or slowed down to work on WS2811.
 //#define WS2811_MODE
 
-// Calculate and send FPS over USART2
+// Calculate FPS and show to user (display on OLED or send over USART2 depending on callback body)
 // WARNING: Enabling this feature is known to cause flickering each time the value is calculated
-//#define ENABLE_FPS_COUNTER
+//#define ENABLE_PERFORMANCE_MONITOR
 
 #ifndef MAX
-#define MAX(x,y) (x > y) ? x : y
+#define MAX(x,y) ((x) > (y)) ? (x) : (y)
+#endif
+
+#ifndef MIN
+#define MIN(x,y) ((x) < (y)) ? (x) : (y)
 #endif
 
 typedef struct colorRGB
@@ -70,7 +80,10 @@ typedef struct comet
 	uint16_t position;
 	colorRGB color;
 	uint8_t size;
+	uint8_t speed;
+	uint8_t ticksElapsed;
 	bool active;
+	bool forward;
 } comet;
 
 // Base LED functions
@@ -91,7 +104,7 @@ void WS2812_SendAll(void);
 
 // Effect functions
 void WS2812_InitMultiCometEffect();
-void WS2812_AddComet(colorRGB color, uint8_t size);
+void WS2812_AddComet(colorRGB color, uint8_t size, uint8_t speed, bool forward);
 void WS2812_MultiCometEffect(void);
 void WS2812_CometEffect(void);
 void WS2812_SimpleMeterEffect(colorRGB color, uint16_t level, bool flip);
