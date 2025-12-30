@@ -48,7 +48,8 @@
 // #define EXAMPLE_VARIABLE_GATED_STROBE
 // #define EXAMPLE_SCROLL_RAINBOW
 // #define EXAMPLE_MANUAL_RAINBOW
-#define EXAMPLE_SCROLL_SATURATION
+// #define EXAMPLE_SCROLL_SATURATION
+#define EXAMPLE_CONTINUOUS_INDEX
 
 // Should not be enabled if either EXAMPLE_SIMPLE_METER_EFFECT or EXAMPLE_MIRRORED_METER_EFFECT is enabled
 //#define ENABLE_POTS_TO_BACKGROUND_COLOR
@@ -477,6 +478,25 @@ int main(void)
 	}
 
 	WS2812_SendAll();
+#endif
+
+#ifdef EXAMPLE_CONTINUOUS_INDEX
+	static float x = 0.0f;
+
+	WS2812_SetLEDFloat(x, 32, 32, 32, false);
+
+	// Increment LED position by small fraction
+	x += 0.05f;
+
+	// Wrap LED position
+	x = fmodf(x, 20);
+
+	WS2812_SendAll();
+
+	// Clear trailing LEDs
+	WS2812_ClearLEDs();
+
+	HAL_Delay(10);
 #endif
 
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t *) rawADCData, 3);
