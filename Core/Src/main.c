@@ -389,30 +389,30 @@ int main(void)
 	WS2812_ClearLEDs();
 
 	colorRGB meterColor = {.red = 32, .green = 32, .blue = 0};
-	WS2812_SimpleMeterEffect(meterColor, meterLevels[0], true);
+	WS2812_SimpleMeterEffect(meterColor, meterLevels[0], false, false, true);
 	meterColor.red = 0;
 	meterColor.green = 32;
 	meterColor.blue = 32;
-	WS2812_SimpleMeterEffect(meterColor, meterLevels[1], true);
+	WS2812_SimpleMeterEffect(meterColor, meterLevels[1], false, false, true);
 	meterColor.red = 32;
 	meterColor.green = 0;
 	meterColor.blue = 32;
-	WS2812_SimpleMeterEffect(meterColor, meterLevels[2], true);
+	WS2812_SimpleMeterEffect(meterColor, meterLevels[2], false, false, true);
 	WS2812_SendAll();
 #endif
 
 #ifdef EXAMPLE_MIRRORED_METER_EFFECT
 	WS2812_ClearLEDs();
 	colorRGB meterColor = {.red = 32, .green = 32, .blue = 0};
-	WS2812_MirroredMeterEffect(meterColor, meterLevels[0], false);
+	WS2812_MirroredMeterEffect(meterColor, meterLevels[0], false, false, true);
 	meterColor.red = 0;
 	meterColor.green = 32;
 	meterColor.blue = 32;
-	WS2812_MirroredMeterEffect(meterColor, meterLevels[1], true);
+	WS2812_MirroredMeterEffect(meterColor, meterLevels[1], true, false, true);
 	meterColor.red = 32;
 	meterColor.green = 0;
 	meterColor.blue = 32;
-	WS2812_MirroredMeterEffect(meterColor, meterLevels[2], true);
+	WS2812_MirroredMeterEffect(meterColor, meterLevels[2], true, false, true);
 	WS2812_SendAll();
 #endif
 
