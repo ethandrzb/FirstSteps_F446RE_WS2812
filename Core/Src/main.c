@@ -49,7 +49,7 @@
 // #define EXAMPLE_SCROLL_RAINBOW
 // #define EXAMPLE_MANUAL_RAINBOW
 // #define EXAMPLE_SCROLL_SATURATION
-#define EXAMPLE_CONTINUOUS_INDEX
+#define EXAMPLE_DRAW_LINE
 
 // Should not be enabled if either EXAMPLE_SIMPLE_METER_EFFECT or EXAMPLE_MIRRORED_METER_EFFECT is enabled
 //#define ENABLE_POTS_TO_BACKGROUND_COLOR
@@ -480,16 +480,16 @@ int main(void)
 	WS2812_SendAll();
 #endif
 
-#ifdef EXAMPLE_CONTINUOUS_INDEX
+#ifdef EXAMPLE_DRAW_LINE
 	static float x = 0.0f;
 
-	WS2812_SetLEDFloat(x, 32, 32, 32, false);
+	WS2812_DrawLine(x, 3.5, 32, 32, 32, false);
 
 	// Increment LED position by small fraction
 	x += 0.05f;
 
 	// Wrap LED position
-	x = fmodf(x, 20);
+	x = fmodf(x, 30);
 
 	WS2812_SendAll();
 
